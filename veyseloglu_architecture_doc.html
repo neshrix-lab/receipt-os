@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receipt OS · Архитектура остатков</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090d;--s1:#0b0f16;--s2:#101620;--s3:#16202e;
+  --b0:rgba(255,255,255,0.04);--b1:rgba(255,255,255,0.08);--b2:rgba(255,255,255,0.14);
+  --text:#e4eaf6;--text2:#9aabc4;--muted:#5a6a82;--dim:#2a3a50;
+  --blue:#3b82f6;--bl:#93c5fd;--bd:rgba(59,130,246,0.12);--bb:rgba(59,130,246,0.30);
+  --teal:#10b981;--tl:#6ee7b7;--td:rgba(16,185,129,0.10);--tb:rgba(16,185,129,0.28);
+  --amber:#f59e0b;--al:#fbbf24;--ad:rgba(245,158,11,0.11);--ab:rgba(245,158,11,0.30);
+  --coral:#ef4444;--cl:#fca5a5;--cd:rgba(239,68,68,0.11);--cb:rgba(239,68,68,0.30);
+  --purple:#8b5cf6;--pl:#c4b5fd;--pd:rgba(139,92,246,0.12);--pb:rgba(139,92,246,0.30);
+  --gold:#d97706;--gl:#fcd34d;--gd:rgba(217,119,6,0.11);--gb:rgba(217,119,6,0.30);
+  --pink:#ec4899;--pkl:#f9a8d4;--pkd:rgba(236,72,153,0.11);--pkb:rgba(236,72,153,0.30);
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;min-height:100vh}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.008) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,0.008) 1px,transparent 1px);
+  background-size:52px 52px;pointer-events:none;z-index:0;
+}
+
+.wrap{max-width:980px;margin:0 auto;padding:48px 32px 80px;position:relative;z-index:1}
+
+/* ── COVER ── */
+.cover{margin-bottom:64px;padding-bottom:36px;border-bottom:1px solid var(--b1)}
+.cover-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);margin-bottom:14px}
+.cover-title{font-size:48px;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin-bottom:14px}
+.cover-title em{color:var(--bl);font-style:normal}
+.cover-sub{font-size:16px;color:var(--text2);max-width:640px;line-height:1.6;margin-bottom:24px}
+.cover-meta{display:flex;gap:10px;flex-wrap:wrap}
+.cm-tag{font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--b2);color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+
+/* ── TOC ── */
+.toc{
+  background:var(--s2);border:1px solid var(--b1);border-radius:16px;
+  padding:20px 24px;margin-bottom:64px;
+}
+.toc-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:14px}
+.toc-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.toc-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:8px;
+  color:var(--text2);text-decoration:none;font-size:13px;
+  border:1px solid transparent;transition:all .15s;
+}
+.toc-item:hover{background:var(--s3);border-color:var(--b1);color:var(--text)}
+.toc-num{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:24px}
+
+/* ── SECTION ── */
+.section{margin-bottom:64px;scroll-margin-top:24px}
+.sec-head{display:flex;align-items:flex-end;gap:14px;margin-bottom:8px}
+.sec-num{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;padding-bottom:7px}
+.sec-title{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.sec-line{height:1px;background:var(--b1);margin-bottom:18px}
+.sec-intro{font-size:14px;color:var(--text2);max-width:680px;margin-bottom:28px;line-height:1.7}
+
+/* ── SUBSECTION ── */
+.sub{margin-bottom:32px}
+.sub-title{font-size:16px;font-weight:700;margin-bottom:10px;letter-spacing:-.01em}
+.sub-text{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px}
+.sub-text strong{color:var(--text)}
+.sub-text code{font-family:var(--mono);font-size:11px;background:var(--s3);padding:1px 6px;border-radius:4px;color:var(--bl);border:1px solid var(--b1)}
+
+/* ── DIAGRAM CARD ── */
+.diagram{
+  background:var(--s2);border:1px solid var(--b1);border-radius:14px;
+  padding:24px;margin-bottom:18px;overflow:hidden;
+}
+.diagram-title{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:18px;text-align:center}
+
+/* ── BLOCKS in diagram ── */
+.block{
+  background:var(--s3);border:1px solid var(--b1);border-radius:10px;
+  padding:12px 16px;display:inline-flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:600;
+  transition:all .15s;
+}
+.b-source{background:var(--bd);border-color:var(--bb);color:var(--bl)}
+.b-agent{background:var(--pd);border-color:var(--pb);color:var(--pl)}
+.b-store{background:var(--s4);border-color:var(--b2)}
+.b-user{background:var(--gd);border-color:var(--gb);color:var(--gl)}
+.b-onec{background:var(--td);border-color:var(--tb);color:var(--tl)}
+.b-out{background:var(--ad);border-color:var(--ab);color:var(--al)}
+.block-icon{font-size:15px;flex-shrink:0}
+
+/* ── FLOW DIAGRAM (vertical) ── */
+.flow-v{display:flex;flex-direction:column;align-items:center;gap:6px}
+.flow-block{
+  background:var(--s3);border:1px solid var(--b1);border-radius:10px;
+  padding:14px 20px;width:100%;max-width:480px;
+  display:flex;align-items:center;gap:12px;
+}
+.fb-icon{font-size:18px;width:32px;text-align:center;flex-shrink:0}
+.fb-body{flex:1}
+.fb-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.fb-sub{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.fb-tag{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;flex-shrink:0}
+.flow-arrow{
+  width:1px;height:18px;background:linear-gradient(to bottom,var(--b2),var(--b0));
+  position:relative;
+}
+.flow-arrow::after{
+  content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+  border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid var(--b2);
+}
+.flow-arrow-label{
+  font-family:var(--mono);font-size:9px;color:var(--dim);
+  text-align:center;padding:2px 0;
+}
+
+/* ── HORIZONTAL FLOW ── */
+.flow-h{display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center}
+.fh-block{
+  background:var(--s3);border:1px solid var(--b1);border-radius:8px;
+  padding:10px 14px;text-align:center;min-width:130px;
+}
+.fh-icon{font-size:18px;margin-bottom:4px}
+.fh-title{font-size:11px;font-weight:700;margin-bottom:2px}
+.fh-sub{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.fh-arrow{
+  flex-shrink:0;color:var(--dim);font-family:var(--mono);font-size:14px;
+  padding:0 8px;
+}
+
+/* ── GRID LAYOUTS for diagram ── */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+
+/* ── DATA SOURCE BLOCK ── */
+.ds-block{
+  background:var(--s3);border:1px solid var(--b1);border-radius:8px;
+  padding:10px 12px;
+}
+.ds-icon{font-size:18px;margin-bottom:5px}
+.ds-name{font-size:12px;font-weight:700;margin-bottom:2px}
+.ds-meta{font-family:var(--mono);font-size:9px;color:var(--muted)}
+
+/* ── BIDIRECTIONAL ARROW ── */
+.bidir-arrow{
+  font-family:var(--mono);font-size:11px;color:var(--muted);
+  text-align:center;padding:4px 0;letter-spacing:.06em;
+}
+
+/* ── AGENT CARDS ── */
+.agents-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.agent-card{
+  background:var(--s2);border:1px solid var(--b1);border-radius:12px;
+  padding:18px;position:relative;overflow:hidden;
+  transition:all .2s;
+}
+.agent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ac-aggregator::before{background:linear-gradient(90deg,var(--blue),transparent)}
+.ac-forecast::before{background:linear-gradient(90deg,var(--purple),transparent)}
+.ac-distributor::before{background:linear-gradient(90deg,var(--teal),transparent)}
+.ac-planner::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.ac-anomaly::before{background:linear-gradient(90deg,var(--coral),transparent)}
+.ac-claim::before{background:linear-gradient(90deg,var(--pink),transparent)}
+
+.ac-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ac-icon{font-size:22px}
+.ac-name{font-size:13px;font-weight:700}
+.ac-tag{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;margin-left:auto}
+.tag-ai{background:var(--pd);border:1px solid var(--pb);color:var(--pl)}
+.tag-code{background:var(--b0);border:1px solid var(--b1);color:var(--muted)}
+.ac-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.ac-flow{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.5;background:var(--s3);border-radius:6px;padding:7px 10px;border:1px solid var(--b0)}
+
+/* ── TABLE ── */
+.table-wrap{background:var(--s2);border:1px solid var(--b1);border-radius:10px;overflow:hidden;margin-bottom:14px}
+table{width:100%;border-collapse:collapse}
+th{
+  font-family:var(--mono);font-size:9px;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--dim);padding:10px 14px;
+  border-bottom:1px solid var(--b1);text-align:left;font-weight:500;
+}
+td{padding:10px 14px;font-size:12px;border-bottom:1px solid var(--b0);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:none}
+.td-mono{font-family:var(--mono);font-size:10px;color:var(--text2)}
+.pill{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px}
+.p-read{background:var(--bd);border:1px solid var(--bb);color:var(--bl)}
+.p-write{background:var(--td);border:1px solid var(--tb);color:var(--tl)}
+.p-internal{background:var(--pd);border:1px solid var(--pb);color:var(--pl)}
+
+/* ── CALLOUT ── */
+.callout{
+  background:var(--s2);border:1px solid var(--b1);border-radius:10px;
+  padding:14px 18px;margin-bottom:14px;
+  border-left:3px solid;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.callout-key{border-left-color:var(--blue)}
+.callout-warn{border-left-color:var(--amber)}
+.callout-info{border-left-color:var(--purple)}
+.co-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.co-body{flex:1}
+.co-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:4px}
+.co-text{font-size:13px;line-height:1.6;color:var(--text)}
+
+/* ── ROLE INTERACTION DIAGRAM ── */
+.roles-diagram{
+  background:var(--s2);border:1px solid var(--b1);border-radius:14px;
+  padding:24px;
+}
+.roles-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;margin-bottom:14px}
+.role-box{
+  background:var(--s3);border:1px solid var(--b1);border-radius:10px;
+  padding:12px 14px;text-align:center;
+}
+.role-icon{font-size:24px;margin-bottom:5px}
+.role-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.role-title{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.role-arrow{
+  font-family:var(--mono);font-size:11px;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.section{animation:fadeUp .4s ease both}
+
+/* ── FOOTER ── */
+.footer{
+  margin-top:80px;padding-top:32px;border-top:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-left{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.footer-right{font-family:var(--mono);font-size:10px;color:var(--dim)}
+
+/* ── PRINT ── */
+@media print{
+  body::before{display:none}
+  .wrap{padding:20px}
+  .section{animation:none;page-break-inside:avoid}
+  .toc{page-break-after:always}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eyebrow">Receipt OS · Архитектурный документ</div>
+  <h1 class="cover-title">Остатки и движение товара<br>как <em>центр</em> системы</h1>
+  <p class="cover-sub">
+    Документ объясняет как работают остатки внутри Receipt OS, откуда тянутся данные,
+    как они меняют другие разделы продукта и какие агенты обеспечивают эту работу.
+  </p>
+  <div class="cover-meta">
+    <span class="cm-tag">Veysəloğlu Group</span>
+    <span class="cm-tag">v1 · 2026</span>
+    <span class="cm-tag">Внутренний документ</span>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div class="toc-label">Содержание</div>
+  <div class="toc-list">
+    <a class="toc-item" href="#s1"><span class="toc-num">01</span>Концепция · почему остатки</a>
+    <a class="toc-item" href="#s2"><span class="toc-num">02</span>Источники данных</a>
+    <a class="toc-item" href="#s3"><span class="toc-num">03</span>Граница с 1С УТ</a>
+    <a class="toc-item" href="#s4"><span class="toc-num">04</span>Поток данных целиком</a>
+    <a class="toc-item" href="#s5"><span class="toc-num">05</span>Шесть агентов системы</a>
+    <a class="toc-item" href="#s6"><span class="toc-num">06</span>Связь разделов</a>
+    <a class="toc-item" href="#s7"><span class="toc-num">07</span>Сценарий рабочего дня</a>
+    <a class="toc-item" href="#s8"><span class="toc-num">08</span>Что не делаем</a>
+  </div>
+</div>
+
+<!-- ─── 01 КОНЦЕПЦИЯ ─── -->
+<section class="section" id="s1">
+  <div class="sec-head">
+    <div class="sec-num">01</div>
+    <h2 class="sec-title">Концепция · почему остатки центральные</h2>
+  </div>
+  <div class="sec-line"></div>
+  <p class="sec-intro">
+    В классической системе приёмки фокус — на накладной. В Receipt OS фокус сместился: <strong>остатки определяют всё остальное</strong>.
+    Из остатков рождаются заказы, заказы порождают приёмки, приёмки фиксируют расхождения, расхождения становятся претензиями.
+    Понимание остатков по всей сети — единственный способ дать менеджеру и агентам полную картину.
+  </p>
+
+  <div class="callout callout-key">
+    <div class="co-icon">🔑</div>
+    <div class="co-body">
+      <div class="co-label">Ключевой принцип</div>
+      <div class="co-text">Receipt OS не хранит остатки. Источник истины — 1С УТ. Receipt OS <strong>читает остатки в реальном времени</strong>, обрабатывает агентами, визуализирует, и принимает решения на их основе.</div>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Цепочка ценности · от остатка к решению</div>
+    <div class="flow-h">
+      <div class="fh-block">
+        <div class="fh-icon">📦</div>
+        <div class="fh-title">Остаток</div>
+        <div class="fh-sub">в 1С УТ</div>
+      </div>
+      <div class="fh-arrow">→</div>
+      <div class="fh-block">
+        <div class="fh-icon">🤖</div>
+        <div class="fh-title">Прогноз</div>
+        <div class="fh-sub">когда закончится</div>
+      </div>
+      <div class="fh-arrow">→</div>
+      <div class="fh-block">
+        <div class="fh-icon">📋</div>
+        <div class="fh-title">Заказ</div>
+        <div class="fh-sub">заказу поставщику</div>
+      </div>
+      <div class="fh-arrow">→</div>
+      <div class="fh-block">
+        <div class="fh-icon">🚚</div>
+        <div class="fh-title">Приёмка</div>
+        <div class="fh-sub">факт vs накладная</div>
+      </div>
+      <div class="fh-arrow">→</div>
+      <div class="fh-block">
+        <div class="fh-icon">⚖️</div>
+        <div class="fh-title">Решение</div>
+        <div class="fh-sub">принять / претензия</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 02 ИСТОЧНИКИ ДАННЫХ ─── -->
+<section class="section" id="s2">
+  <div class="sec-head">
+    <div class="sec-num">02</div>
+    <h2 class="sec-title">Источники данных по остаткам</h2>
+  </div>
+  <div class="sec-line"></div>
+  <p class="sec-intro">
+    Остатки в холдинге Veysəloğlu разбросаны по трём уровням. Каждый уровень — свой источник данных и свой способ синхронизации.
+  </p>
+
+  <div class="diagram">
+    <div class="diagram-title">Три уровня хранения остатков</div>
+    <div class="grid-3">
+      <div class="ds-block">
+        <div class="ds-icon">🏭</div>
+        <div class="ds-name">Центральный склад</div>
+        <div class="ds-meta">1С УТ · головной<br>~2 100 SKU</div>
+      </div>
+      <div class="ds-block">
+        <div class="ds-icon">🏪</div>
+        <div class="ds-name">Магазины сети</div>
+        <div class="ds-meta">1С УТ магазина<br>500–2 000 точек</div>
+      </div>
+      <div class="ds-block">
+        <div class="ds-icon">🚚</div>
+        <div class="ds-name">В пути</div>
+        <div class="ds-meta">заказы в работе<br>отгрузки между складами</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">Уровень 1 · Центральный склад</h3>
+    <p class="sub-text">
+      Главный распределительный хаб Veysəloğlu. Сюда приходят все поставки от внешних поставщиков
+      (Parvaз, Coca-Cola, ProFood, Nestlé...). Отсюда товар уходит в магазины.
+      Receipt OS читает остатки <code>SELECT * FROM Регистр.ОстаткиТоваров</code> через COM или HTTP-сервис 1С.
+    </p>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">Уровень 2 · Магазины сети</h3>
+    <p class="sub-text">
+      Сеть состоит из нескольких брендов: <strong>OBA Market</strong>, <strong>Araz Market</strong>, <strong>Rossmann</strong> и другие.
+      У каждого бренда — десятки или сотни точек. Каждая точка ведёт свой учёт в 1С.
+      Receipt OS агрегирует остатки по магазинам через единый интеграционный слой 1С холдинга.
+    </p>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">Уровень 3 · В пути</h3>
+    <p class="sub-text">
+      Это товары которые уже заказаны, но физически ещё не на полке. Включает: открытые заказы поставщикам
+      (ожидаем поступления на центральный склад) и внутренние перемещения (отгружено с центра, не принято в магазине).
+      Receipt OS читает эти данные из 1С чтобы прогнозы учитывали будущие поступления.
+    </p>
+  </div>
+</section>
+
+<!-- ─── 03 ГРАНИЦА С 1С ─── -->
+<section class="section" id="s3">
+  <div class="sec-head">
+    <div class="sec-num">03</div>
+    <h2 class="sec-title">Граница с 1С УТ и магазинами</h2>
+  </div>
+  <div class="sec-line"></div>
+  <p class="sec-intro">
+    Receipt OS не дублирует 1С. Чёткое разделение ответственности: 1С хранит истину, Receipt OS делает её доступной для агентов и людей. Магазины сети — автономные единицы со своими системами. Receipt OS взаимодействует с ними только через документы 1С холдинга.
+  </p>
+
+  <!-- TOPOLOGY -->
+  <div class="diagram" style="margin-bottom:18px">
+    <div class="diagram-title">Топология систем · что где стоит</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div style="background:var(--bd);border:1px solid var(--bb);border-radius:10px;padding:14px 18px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--bl);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px">Veysəloğlu · Центральный склад</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+          <div class="ds-block"><div class="ds-icon">🏛</div><div class="ds-name">1С:УТ</div><div class="ds-meta">Управление торговлей · основная учётная система</div></div>
+          <div class="ds-block"><div class="ds-icon">📦</div><div class="ds-name">WMS склада</div><div class="ds-meta">Физическое управление · ячейки · штрихкоды</div></div>
+          <div class="ds-block" style="border-color:var(--pb);background:var(--pd)"><div class="ds-icon">🤖</div><div class="ds-name" style="color:var(--pl)">Receipt OS</div><div class="ds-meta">Читает 1С · решения агентов</div></div>
+          <div class="ds-block"><div class="ds-icon">📧</div><div class="ds-name">Email / Портал</div><div class="ds-meta">Коммуникация с поставщиками</div></div>
+        </div>
+      </div>
+
+      <div style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--dim);padding:4px 0">
+        ↕ Документооборот 1С (заявки, накладные, перемещения, акты)
+      </div>
+
+      <div style="background:var(--s3);border:1px solid var(--b1);border-radius:10px;padding:14px 18px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px">Магазины сети · OBA / Araz / Rossmann / другие</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+          <div class="ds-block"><div class="ds-icon">🏪</div><div class="ds-name">1С магазина</div><div class="ds-meta">Свой экземпляр или облачный</div></div>
+          <div class="ds-block"><div class="ds-icon">📦</div><div class="ds-name">WMS магазина</div><div class="ds-meta">Может быть отдельный или встроен в 1С</div></div>
+          <div class="ds-block"><div class="ds-icon">🧾</div><div class="ds-name">POS система</div><div class="ds-meta">Кассы · продажи · чеки</div></div>
+          <div class="ds-block" style="opacity:.4"><div class="ds-icon">🚫</div><div class="ds-name">Receipt OS</div><div class="ds-meta">Не работает напрямую с магазином</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="callout callout-info">
+    <div class="co-icon">🏪</div>
+    <div class="co-body">
+      <div class="co-label">Магазины — источник данных, не пользователи</div>
+      <div class="co-text">Receipt OS <strong>не устанавливается в магазинах</strong> и не работает с их сотрудниками напрямую. Данные по остаткам, продажам и внутренним заказам магазинов поступают в Receipt OS через интеграцию с 1С холдинга — автоматически, без участия персонала магазина.</div>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Контракт между Receipt OS и 1С</div>
+    <div class="grid-2" style="gap:14px">
+      <div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--bl);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;text-align:center">← Читаем из 1С</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📦 Остатки центрального склада</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">🏪 Остатки магазинов (агрегированно)</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📋 Открытые заказы поставщикам</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">🚚 Внутренние перемещения</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📈 История продаж / расхода</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📋 Заявки магазинов на пополнение</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📖 Справочник SKU</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📄 Договоры с поставщиками</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">🏢 Контрагенты и условия</div></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--tl);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;text-align:center">Пишем в 1С →</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📄 Приходные накладные после приёмки</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📋 Новые заказы одобренные менеджером</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">🔁 Заявки на внутреннее перемещение</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">⚖️ Документы расхождений</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📨 Претензии как документ 1С</div></div>
+        </div>
+
+        <div style="margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;text-align:center">Документы от магазинов через 1С</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">📥 Заявка на пополнение → Veysəloğlu</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">✅ Приходная накладная магазина (принято)</div></div>
+          <div class="ds-block"><div class="ds-name" style="font-size:11px">⚠️ Акт расхождений при приёмке</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="co-icon">⚠️</div>
+    <div class="co-body">
+      <div class="co-label">Важно для архитектуры</div>
+      <div class="co-text">Receipt OS <strong>не пишет</strong> остатки в 1С напрямую. Остатки пересчитываются 1С автоматически на основе документов которые система создала (приходных накладных, перемещений). Это сохраняет 1С как единственный источник истины.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-warn" style="margin-top:12px">
+    <div class="co-icon">❓</div>
+    <div class="co-body">
+      <div class="co-label">Критичный вопрос для уточнения у клиента</div>
+      <div class="co-text">Магазины сети работают на <strong>едином холдинговом 1С</strong> (одна база, разные организации) или у каждого магазина/бренда <strong>свой отдельный экземпляр 1С</strong>? От ответа зависит сложность интеграции и скорость синхронизации данных. Единый холдинговый 1С — интеграция тривиальная. Отдельные экземпляры — нужен интеграционный слой между ними.</div>
+    </div>
+  </div>
+
+  <h3 class="sub-title" style="margin-top:20px">Технология интеграции</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Метод</th><th>Когда используем</th><th>Скорость</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill p-read">COM-объект</span></td><td class="td-mono">Чтение остатков в реальном времени · справочников</td><td class="td-mono">мс</td></tr>
+        <tr><td><span class="pill p-read">HTTP-сервис 1С</span></td><td class="td-mono">Чтение исторических данных · аналитики · магазины</td><td class="td-mono">~1с</td></tr>
+        <tr><td><span class="pill p-write">COM-объект</span></td><td class="td-mono">Создание приходных накладных и заказов</td><td class="td-mono">~2с</td></tr>
+        <tr><td><span class="pill p-internal">XML-обмен</span></td><td class="td-mono">Синхронизация с магазинами ночью · резерв</td><td class="td-mono">мин</td></tr>
+        <tr><td><span class="pill p-internal">Webhook 1С</span></td><td class="td-mono">Уведомления при создании нового документа</td><td class="td-mono">сек</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── 04 ПОТОК ДАННЫХ ─── -->
+<section class="section" id="s4">
+  <div class="sec-head">
+    <div class="sec-num">04</div>
+    <h2 class="sec-title">Поток данных целиком</h2>
+  </div>
+  <div class="sec-line"></div>
+  <p class="sec-intro">
+    Как одна цифра остатка превращается в действие. От источника до решения через каждого агента.
+  </p>
+
+  <div class="diagram">
+    <div class="diagram-title">Жизненный цикл одной позиции · Масло сл. 82%</div>
+    <div class="flow-v">
+
+      <div class="flow-block" style="border-color:var(--bb);background:var(--bd)">
+        <div class="fb-icon">📦</div>
+        <div class="fb-body">
+          <div class="fb-title" style="color:var(--bl)">1С УТ · остаток масла на центральном складе</div>
+          <div class="fb-sub">48 единиц · обновлено каждые 5 минут</div>
+        </div>
+        <span class="fb-tag" style="background:var(--bd);border:1px solid var(--bb);color:var(--bl)">Источник</span>
+      </div>
+
+      <div class="flow-arrow"></div>
+      <div class="flow-arrow-label">читает каждые 5 минут</div>
+
+      <div class="flow-block" style="border-color:var(--pb);background:var(--pd)">
+        <div class="fb-icon">🤖</div>
+        <div class="fb-body">
+          <div class="fb-title" style="color:var(--pl)">Агент-агрегатор остатков</div>
+          <div class="fb-sub">собирает данные со всех складов · кэширует в Supabase</div>
+        </div>
+        <span class="fb-tag" style="background:var(--pd);border:1px solid var(--pb);color:var(--pl)">AI · фоновый</span>
+      </div>
+
+      <div class="flow-arrow"></div>
+      <div class="flow-arrow-label">пересчитывает прогноз</div>
+
+      <div class="flow-block" style="border-color:var(--pb);background:var(--pd)">
+        <div class="fb-icon">🔮</div>
+        <div class="fb-body">
+          <div class="fb-title" style="color:var(--pl)">Агент-прогноз потребления</div>
+          <div class="fb-sub">расход 16/день · хватит на 3 дня · нужно срочно</div>
+        </div>
+        <span class="fb-tag" style="background:var(--pd);border:1px solid var(--pb);color:var(--pl)">AI · ML-модель</span>
+      </div>
+
+      <div class="flow-arrow"></div>
+      <div class="flow-arrow-label">генерирует рекомендацию</div>
+
+      <div class="flow-block" style="border-color:var(--pb);background:var(--pd)">
+        <div class="fb-icon">📋</div>
+        <div class="fb-body">
+          <div class="fb-title" style="color:var(--pl)">Агент-планировщик заказов</div>
+          <div class="fb-sub">«Заказать 500 у Parvaз или 400 у Araz Dairy»</div>
+        </div>
+        <span class="fb-tag" style="background:var(--pd);border:1px solid var(--pb);color:var(--pl)">AI · LLM</span>
+      </div>
+
+      <div class="flow-arrow"></div>
+      <div class="flow-arrow-label">появляется в Inbox</div>
+
+      <div class="flow-block" style="border-color:var(--gb);background:var(--gd)">
+        <div class="fb-icon">👤</div>
+        <div class="fb-body">
+          <div class="fb-title" style="color:var(--gl)">Ирада · менеджер по закупкам</div>
+          <div class="fb-sub">видит срочное решение в Inbox → одобряет заказ</div>
+        </div>
+        <span class="fb-tag" style="background:var(--gd);border:1px solid var(--gb);color:var(--gl)">Человек</span>
+      </div>
+
+      <div class="flow-arrow"></div>
+      <div class="flow-arrow-label">создаёт документ</div>
+
+      <div class="flow-block" style="border-color:var(--tb);background:var(--td)">
+        <div class="fb-icon">📋</div>
+        <div class="fb-body">
+          <div class="fb-title" style="color:var(--tl)">1С УТ · Заказ создан</div>
+          <div class="fb-sub">PO-2026-0501 · Parvaз Group · 500 единиц · до 18.05</div>
+        </div>
+        <span class="fb-tag" style="background:var(--td);border:1px solid var(--tb);color:var(--tl)">Результат</span>
+      </div>
+
+      <div class="flow-arrow"></div>
+      <div class="flow-arrow-label">портал поставщика видит</div>
+
+      <div class="flow-block" style="border-color:var(--ab);background:var(--ad)">
+        <div class="fb-icon">📤</div>
+        <div class="fb-body">
+          <div class="fb-title" style="color:var(--al)">Parvaз Group получает уведомление</div>
+          <div class="fb-sub">отгрузка → накладная → приёмка → новый цикл</div>
+        </div>
+        <span class="fb-tag" style="background:var(--ad);border:1px solid var(--ab);color:var(--al)">Цикл замкнут</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── 05 АГЕНТЫ ─── -->
+<section class="section" id="s5">
+  <div class="sec-head">
+    <div class="sec-num">05</div>
+    <h2 class="sec-title">Шесть агентов системы</h2>
+  </div>
+  <div class="sec-line"></div>
+  <p class="sec-intro">
+    Каждый агент решает одну задачу. Вместе они закрывают полный цикл управления остатками и закупками.
+    Не каждый «агент» использует LLM — некоторые это просто детерминированный код.
+  </p>
+
+  <div class="agents-grid">
+
+    <div class="agent-card ac-aggregator">
+      <div class="ac-head">
+        <div class="ac-icon">🔄</div>
+        <div class="ac-name">Агент-агрегатор</div>
+        <span class="ac-tag tag-code">Код</span>
+      </div>
+      <p class="ac-desc">Собирает остатки со всех 1С (центральный + магазины), кэширует в Supabase, обеспечивает быстрый доступ для других агентов и UI.</p>
+      <div class="ac-flow">1С УТ → COM/HTTP → Supabase pgvector → API для агентов</div>
+    </div>
+
+    <div class="agent-card ac-forecast">
+      <div class="ac-head">
+        <div class="ac-icon">🔮</div>
+        <div class="ac-name">Агент-прогноз потребления</div>
+        <span class="ac-tag tag-ai">AI</span>
+      </div>
+      <p class="ac-desc">Смотрит на историю продаж за 90 дней + сезонность + текущий остаток → предсказывает когда закончится товар на складе или в магазине.</p>
+      <div class="ac-flow">История продаж + остаток → ML-модель → дата дефицита по SKU</div>
+    </div>
+
+    <div class="agent-card ac-planner">
+      <div class="ac-head">
+        <div class="ac-icon">📋</div>
+        <div class="ac-name">Агент-планировщик заказов</div>
+        <span class="ac-tag tag-ai">AI</span>
+      </div>
+      <p class="ac-desc">Объединяет прогноз дефицита + время доставки поставщика + рейтинг поставщика → предлагает что и когда заказывать. Учитывает альтернативных поставщиков.</p>
+      <div class="ac-flow">Прогноз + рейтинги + сроки → Claude → рекомендация заказа</div>
+    </div>
+
+    <div class="agent-card ac-distributor">
+      <div class="ac-head">
+        <div class="ac-icon">🚚</div>
+        <div class="ac-name">Агент-распределитель</div>
+        <span class="ac-tag tag-ai">AI</span>
+      </div>
+      <p class="ac-desc">Видит остатки на складе и потребности по 500-2000 магазинов → предлагает оптимальное распределение. Находит переполнения и недостачи, балансирует.</p>
+      <div class="ac-flow">Остатки склад + остатки магазины → линейное программирование + LLM → план отгрузок</div>
+    </div>
+
+    <div class="agent-card ac-anomaly">
+      <div class="ac-head">
+        <div class="ac-icon">⚠️</div>
+        <div class="ac-name">Агент-аномалист</div>
+        <span class="ac-tag tag-ai">AI</span>
+      </div>
+      <p class="ac-desc">Мониторит паттерны: систематические недопоставки, регулярные расхождения цен, странные потери в пути «склад → магазин». Эскалирует в Inbox.</p>
+      <div class="ac-flow">История приёмок + статистика → Claude интерпретация → алерт менеджеру</div>
+    </div>
+
+    <div class="agent-card ac-claim">
+      <div class="ac-head">
+        <div class="ac-icon">📨</div>
+        <div class="ac-name">Агент-переговорщик</div>
+        <span class="ac-tag tag-ai">AI</span>
+      </div>
+      <p class="ac-desc">Драфтит претензии, письма поставщикам, запросы на корректировки. Менеджер только проверяет и подписывает — экономия часов работы.</p>
+      <div class="ac-flow">Данные о расхождении → Claude генерация текста → менеджер подпись → Email/портал</div>
+    </div>
+
+  </div>
+
+  <div class="callout callout-info">
+    <div class="co-icon">🤖</div>
+    <div class="co-body">
+      <div class="co-label">Координация агентов</div>
+      <div class="co-text">Агенты работают независимо, но обмениваются результатами через общую базу. Каждый может «спросить» другого: планировщик читает прогноз, аномалист видит план заказов, переговорщик использует данные аномалиста.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 06 СВЯЗЬ РАЗДЕЛОВ ─── -->
+<section class="section" id="s6">
+  <div class="sec-head">
+    <div class="sec-num">06</div>
+    <h2 class="sec-title">Как магазины и остатки влияют на разделы</h2>
+  </div>
+  <div class="sec-line"></div>
+  <p class="sec-intro">
+    Магазины сети — не пользователи Receipt OS, но активные участники процесса через документооборот 1С. Понимание этого меняет логику каждого раздела.
+  </p>
+
+  <!-- STORES INTERACTION MAP -->
+  <div class="diagram" style="margin-bottom:20px">
+    <div class="diagram-title">Точки взаимодействия магазинов с Receipt OS</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center">
+        <div class="ds-block" style="text-align:center">
+          <div class="ds-icon">🏪</div>
+          <div class="ds-name">Магазин сети</div>
+          <div class="ds-meta">Свои 1С / WMS / POS</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center;font-family:var(--mono);font-size:9px;color:var(--dim)">
+          <div style="text-align:center">через 1С холдинга</div>
+          <div style="font-size:16px">⇄</div>
+        </div>
+        <div class="ds-block" style="text-align:center;border-color:var(--pb);background:var(--pd)">
+          <div class="ds-icon">🤖</div>
+          <div class="ds-name" style="color:var(--pl)">Receipt OS</div>
+          <div class="ds-meta">Видит данные · не управляет</div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:8px">
+        <table>
+          <thead><tr><th>Действие магазина</th><th>Документ в 1С</th><th>Что видит Receipt OS</th><th>Кто реагирует</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Остатки заканчиваются</td>
+              <td class="td-mono">Заявка на пополнение</td>
+              <td>Агент-распределитель получает задачу</td>
+              <td>Менеджер · Inbox</td>
+            </tr>
+            <tr>
+              <td>Принята машина со склада</td>
+              <td class="td-mono">Приходная накладная магазина</td>
+              <td>Сверка «отгружено vs принято» → расхождение?</td>
+              <td>Менеджер · раздел Заказы</td>
+            </tr>
+            <tr>
+              <td>Расхождение при приёмке</td>
+              <td class="td-mono">Акт расхождений</td>
+              <td>Агент-аномалист фиксирует · потери в пути</td>
+              <td>Менеджер · Аналитика</td>
+            </tr>
+            <tr>
+              <td>Продажи за день</td>
+              <td class="td-mono">Закрытие кассовой смены</td>
+              <td>Агент-прогноз пересчитывает расход по SKU</td>
+              <td>Автоматически · ночью</td>
+            </tr>
+            <tr>
+              <td>Переполнение / неликвид</td>
+              <td class="td-mono">Отчёт об остатках</td>
+              <td>Агент-распределитель предлагает перераспределение</td>
+              <td>Менеджер · Остатки</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">📥 Inbox · очередь решений</h3>
+    <p class="sub-text">
+      <strong>Что меняется:</strong> задачи в Inbox приходят не только от поставщиков, но и от магазинов — через документы 1С.
+      Заявка магазина на пополнение → агент-планировщик сверяет с остатками склада → если нужно заказывать у поставщика, появляется задача в Inbox.
+      Акт расхождений от магазина → агент-аномалист анализирует паттерн → алерт «систематические потери на маршруте Склад → Araz Xətai».
+    </p>
+    <p class="sub-text">
+      <strong>Источник:</strong> 1С магазина → XML/HTTP обмен → 1С холдинга → агент-агрегатор → Inbox.
+    </p>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">📦 Остатки · три уровня</h3>
+    <p class="sub-text">
+      <strong>Что меняется:</strong> раздел теперь показывает три слоя. Центральный склад — в реальном времени через COM. Магазины — агрегированно, с задержкой до нескольких часов (зависит от частоты синхронизации 1С). «В пути» — заказы отгруженные но ещё не принятые магазином.
+    </p>
+    <p class="sub-text">
+      <strong>Важно:</strong> данные по магазинам — это <strong>агрегат</strong>, не детальный учёт. Receipt OS видит «в OBA Nizami осталось 48 ед. масла», а не «масло на полке номер 3». WMS магазина управляет деталями.
+    </p>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">🏢 Поставщики · 4-параметровый рейтинг</h3>
+    <p class="sub-text">
+      <strong>Что меняется:</strong> рейтинг учитывает точность цен, количество, сроки и качество.
+      Данные по количеству и качеству берутся из актов приёмки на <strong>центральном складе</strong> — не из магазинов.
+      Магазины не оценивают поставщиков напрямую, они принимают товар уже от склада Veysəloğlu.
+    </p>
+    <p class="sub-text">
+      <strong>Источник:</strong> 1С УТ (заказы + накладные + акты приёмки) → агент-аномалист → пересчёт рейтинга раз в день.
+    </p>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">📋 Заказы · два потока</h3>
+    <p class="sub-text">
+      <strong>Внешние заказы</strong> (Veysəloğlu → поставщикам) — формирует агент-планировщик на основе остатков склада и прогноза потребления по всей сети.
+    </p>
+    <p class="sub-text">
+      <strong>Внутренние заявки</strong> (магазин → центральный склад) — создаются в 1С магазина, Receipt OS читает их и показывает менеджеру. Агент-распределитель предлагает оптимальное распределение между магазинами — иногда лучше перебросить из другого магазина, чем заказывать у поставщика.
+    </p>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">📄 Рабочее место оператора</h3>
+    <p class="sub-text">
+      <strong>Что меняется:</strong> при приёмке товара на центральный склад оператор видит контекст — какие магазины ждут эти позиции, с какой срочностью.
+      Если приёмка показала недопоставку — агент сразу пересчитывает сколько магазинов не получат плановый товар.
+    </p>
+    <p class="sub-text">
+      <strong>Источник:</strong> заявки магазинов из 1С → агент-агрегатор кэширует → показывает оператору при открытии накладной.
+    </p>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">📤 Портал поставщика</h3>
+    <p class="sub-text">
+      <strong>Что меняется:</strong> поставщик видит агрегированный прогноз потребления по своим SKU — рассчитанный на основе продаж по всей сети магазинов.
+      Это даёт поставщику возможность планировать производство и предлагать выгодные условия заранее.
+    </p>
+    <p class="sub-text">
+      <strong>Важно:</strong> поставщик видит только прогноз по <strong>своим позициям</strong> и только агрегированные цифры — без разбивки по конкретным магазинам.
+    </p>
+  </div>
+
+  <div class="sub">
+    <h3 class="sub-title">📈 Аналитика · внутренние потери</h3>
+    <p class="sub-text">
+      <strong>Новый блок которого нет в классических системах:</strong> потери при внутренних перемещениях «склад → магазин».
+      Receipt OS сравнивает расходную накладную (что отгружено) с приходной накладной магазина (что принято).
+      Систематические расхождения по конкретному маршруту или магазину — сигнал для службы безопасности.
+    </p>
+    <p class="sub-text">
+      <strong>Источник:</strong> расходные накладные 1С холдинга + приходные накладные 1С магазинов → агент-аномалист → раздел Аналитика.
+    </p>
+  </div>
+</section>
+
+<!-- ─── 07 СЦЕНАРИЙ ─── -->
+<section class="section" id="s7">
+  <div class="sec-head">
+    <div class="sec-num">07</div>
+    <h2 class="sec-title">Сценарий рабочего дня</h2>
+  </div>
+  <div class="sec-line"></div>
+  <p class="sec-intro">
+    Утро 15 мая. Ирада приходит в офис. Что происходит с данными до того как она открыла ноутбук.
+  </p>
+
+  <div class="roles-diagram">
+    <div class="diagram-title">Хронология одного дня · 15 мая 2026</div>
+
+    <div style="display:flex;flex-direction:column;gap:6px">
+
+      <div class="flow-block" style="background:var(--s3);max-width:none">
+        <div class="fb-icon" style="font-family:var(--mono);color:var(--bl);font-size:13px">06:00</div>
+        <div class="fb-body">
+          <div class="fb-title">Агент-агрегатор начал ночную синхронизацию</div>
+          <div class="fb-sub">Прочитал остатки из 1С УТ центрального склада и 18 магазинов · 247 SKU обновились</div>
+        </div>
+      </div>
+
+      <div class="flow-block" style="background:var(--s3);max-width:none">
+        <div class="fb-icon" style="font-family:var(--mono);color:var(--bl);font-size:13px">06:30</div>
+        <div class="fb-body">
+          <div class="fb-title">Агент-прогноз пересчитал даты дефицита</div>
+          <div class="fb-sub">Нашёл 14 SKU с запасом менее 3 дней · 38 SKU между 3 и 7 дней</div>
+        </div>
+      </div>
+
+      <div class="flow-block" style="background:var(--s3);max-width:none">
+        <div class="fb-icon" style="font-family:var(--mono);color:var(--bl);font-size:13px">07:00</div>
+        <div class="fb-body">
+          <div class="fb-title">Агент-планировщик подготовил черновики заказов</div>
+          <div class="fb-sub">3 критичных заказа + 8 плановых · выбраны оптимальные поставщики с учётом рейтингов</div>
+        </div>
+      </div>
+
+      <div class="flow-block" style="background:var(--s3);max-width:none">
+        <div class="fb-icon" style="font-family:var(--mono);color:var(--bl);font-size:13px">07:15</div>
+        <div class="fb-body">
+          <div class="fb-title">Агент-распределитель проверил магазины</div>
+          <div class="fb-sub">Нашёл переполнение по кефиру в OBA Gənclik · недостачу в Araz Xətai · предложил переброску</div>
+        </div>
+      </div>
+
+      <div class="flow-block" style="background:var(--s3);max-width:none">
+        <div class="fb-icon" style="font-family:var(--mono);color:var(--bl);font-size:13px">07:30</div>
+        <div class="fb-body">
+          <div class="fb-title">Агент-аномалист сформировал отчёт</div>
+          <div class="fb-sub">Parvaз — третья неделя расхождения, ProFood — упал SKU-матч, Şərq Şərab — договор истекает через 7 дней</div>
+        </div>
+      </div>
+
+      <div class="flow-block" style="background:var(--s3);max-width:none">
+        <div class="fb-icon" style="font-family:var(--mono);color:var(--bl);font-size:13px">08:00</div>
+        <div class="fb-body">
+          <div class="fb-title">Агент-переговорщик сгенерировал претензию</div>
+          <div class="fb-sub">По расхождению Parvaз #ПГ-1192 · 4 820 ₼ · ждёт подписи Ирады</div>
+        </div>
+      </div>
+
+      <div class="flow-block" style="background:var(--gd);max-width:none;border-color:var(--gb)">
+        <div class="fb-icon" style="font-family:var(--mono);color:var(--gl);font-size:13px">09:00</div>
+        <div class="fb-body">
+          <div class="fb-title" style="color:var(--gl)">👤 Ирада открыла Receipt OS</div>
+          <div class="fb-sub">Видит в Inbox: 3 срочных решения, 5 на мониторинге. Каждое — с готовым ответом от агента. Делает 11 кликов и закрывает критичное за 20 минут.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="callout callout-key">
+    <div class="co-icon">⚡</div>
+    <div class="co-body">
+      <div class="co-label">Главное</div>
+      <div class="co-text">Когда Ирада приходит на работу — система уже сделала за неё всю аналитическую работу. Её роль — <strong>принимать решения по подготовленным агентом вариантам</strong>, а не копать данные вручную.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 08 ЧТО НЕ ДЕЛАЕМ ─── -->
+<section class="section" id="s8">
+  <div class="sec-head">
+    <div class="sec-num">08</div>
+    <h2 class="sec-title">Что мы НЕ делаем</h2>
+  </div>
+  <div class="sec-line"></div>
+  <p class="sec-intro">
+    Список того что Receipt OS сознательно оставляет в 1С или вне зоны ответственности. Это важно для разговора с клиентом — чтобы не было ложных ожиданий.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Что не делаем</th><th>Где это есть</th><th>Почему</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Не ведём учёт остатков</strong></td><td class="td-mono">1С УТ</td><td class="td-mono">Источник истины должен быть один. Дублирование = расхождения и ошибки.</td></tr>
+        <tr><td><strong>Не делаем физическую приёмку</strong></td><td class="td-mono">1С Склад + сканеры</td><td class="td-mono">Сканеры штрихкодов работают в 1С. Мы читаем результат.</td></tr>
+        <tr><td><strong>Не ведём бухгалтерию</strong></td><td class="td-mono">1С Бухгалтерия</td><td class="td-mono">УТ автоматически выгружает данные в бухгалтерию через стандартный обмен.</td></tr>
+        <tr><td><strong>Не управляем ценообразованием</strong></td><td class="td-mono">1С УТ + ERP</td><td class="td-mono">Розничные цены — отдельный процесс. Мы работаем с ценами поставщиков.</td></tr>
+        <tr><td><strong>Не делаем POS / кассы</strong></td><td class="td-mono">Отдельные кассовые системы</td><td class="td-mono">Это совершенно другая категория продукта.</td></tr>
+        <tr><td><strong>Не ведём кадровый учёт</strong></td><td class="td-mono">1С ЗУП</td><td class="td-mono">Не наш сегмент.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-info">
+    <div class="co-icon">🎯</div>
+    <div class="co-body">
+      <div class="co-label">Позиционирование</div>
+      <div class="co-text">Receipt OS — это <strong>интеллектуальный слой поверх 1С</strong> для приёмки, контроля остатков и работы с поставщиками. Мы не заменяем 1С, мы делаем её решения видимыми и автоматическими там где это возможно.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-left">Receipt OS · Архитектура остатков · v1.0</div>
+  <div class="footer-right">NESHRIX · Veysəloğlu · Внутренний документ</div>
+</div>
+
+</div>
+</body>
+</html>

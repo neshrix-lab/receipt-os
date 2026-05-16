@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sinq OS · Админ</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090d;--s1:#0b0f16;--s2:#101620;--s3:#16202e;--s4:#1c2a3c;
+  --b0:rgba(255,255,255,0.04);--b1:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.12);--b3:rgba(255,255,255,0.20);
+  --text:#e4eaf6;--text2:#8fa0be;--muted:#4e6080;--dim:#2a3a50;
+  --blue:#2563eb;--bl:#93bbff;--bd:rgba(37,99,235,0.12);--bb:rgba(37,99,235,0.30);
+  --teal:#0ea87a;--tl:#5ddcb0;--td:rgba(14,168,122,0.10);--tb:rgba(14,168,122,0.28);
+  --amber:#d97706;--al:#fbbf24;--ad:rgba(217,119,6,0.11);--ab:rgba(217,119,6,0.30);
+  --coral:#dc2626;--cl:#fca5a5;--cd:rgba(220,38,38,0.11);--cb:rgba(220,38,38,0.28);
+  --purple:#7c3aed;--pl:#c4b5fd;--pd:rgba(124,58,237,0.12);--pb:rgba(124,58,237,0.28);
+  --gold:#b45309;--gl:#fcd34d;--gd:rgba(180,83,9,0.10);--gb:rgba(180,83,9,0.26);
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:8px;--r2:12px;--r3:16px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--font);color:var(--text);display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.008) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,0.008) 1px,transparent 1px);
+  background-size:52px 52px;pointer-events:none;z-index:0}
+
+/* ── TOPBAR ── */
+.topbar{height:54px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0;position:relative;z-index:20}
+.tb-l{display:flex;align-items:center;gap:14px}
+.tb-logo{font-size:15px;font-weight:800;letter-spacing:-.015em}
+.tb-logo em{color:var(--bl);font-style:normal}
+.tb-sep{width:1px;height:20px;background:var(--b2)}
+.tb-badge{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;background:var(--gd);border:1px solid var(--gb);color:var(--gl);text-transform:uppercase;letter-spacing:.12em}
+.tb-role-name{font-size:13px;font-weight:600;color:var(--text2)}
+.tb-r{display:flex;align-items:center;gap:8px}
+.tb-status{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:20px;background:var(--td);border:1px solid var(--tb);color:var(--tl)}
+.ts-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.tb-time{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.tb-user{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--muted);padding:4px 10px;border-radius:var(--r);border:1px solid var(--b1);cursor:pointer;transition:all .15s}
+.tb-user:hover{border-color:var(--b2);color:var(--text2)}
+.av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;background:var(--gd);border:1px solid var(--gb);color:var(--gl)}
+
+/* ── LAYOUT ── */
+.layout{display:flex;flex:1;overflow:hidden;position:relative;z-index:1}
+
+/* ── SIDEBAR ── */
+.sidebar{width:210px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:14px 10px;gap:2px;overflow:hidden}
+.nav-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);padding:0 8px;margin:10px 0 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--r);cursor:pointer;transition:all .15s;border:1px solid transparent;font-size:12px;font-weight:500;color:var(--muted)}
+.nav-item:hover{background:var(--b0);color:var(--text2)}
+.nav-item.active{background:var(--gd);border-color:var(--gb);color:var(--gl)}
+.nav-icon{width:18px;text-align:center;font-size:14px;flex-shrink:0}
+
+.sidebar-bottom{margin-top:auto;padding-top:12px;border-top:1px solid var(--b0)}
+.sys-health{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:10px 12px}
+.sh-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.sh-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;font-family:var(--mono);font-size:10px}
+.sh-name{color:var(--text2)}
+.sh-val{padding:1px 6px;border-radius:3px;font-size:9px}
+.sh-ok{background:var(--td);border:1px solid var(--tb);color:var(--tl)}
+.sh-warn{background:var(--ad);border:1px solid var(--ab);color:var(--al)}
+.sh-err{background:var(--cd);border:1px solid var(--cb);color:var(--cl)}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.page-header{padding:16px 24px 0;flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between}
+.ph-date{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px}
+.ph-title{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.ph-actions{display:flex;gap:6px}
+
+.page-tabs{display:flex;gap:0;padding:0 24px;border-bottom:1px solid var(--b1);flex-shrink:0;margin-top:14px}
+.pt{font-family:var(--mono);font-size:11px;padding:9px 16px;color:var(--muted);cursor:pointer;transition:all .15s;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:6px}
+.pt:hover{color:var(--text2)}
+.pt.on{color:var(--text);border-bottom-color:var(--gold)}
+.pt-dot{width:6px;height:6px;border-radius:50%}
+
+/* ── SCREENS ── */
+.screen{display:none;flex:1;overflow-y:auto;flex-direction:column}
+.screen.active{display:flex}
+.screen::-webkit-scrollbar{width:4px}
+.screen::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* ── SHARED COMPONENTS ── */
+.panel{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;margin-bottom:12px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--b0);gap:10px}
+.ph-sm{font-size:12px;font-weight:700}
+.panel-body{padding:16px 18px}
+
+.btn{font-family:var(--mono);font-size:10px;padding:5px 12px;border-radius:var(--r);border:1px solid var(--b1);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:hover{background:var(--b1);border-color:var(--b2);color:var(--text)}
+.btn-blue{background:var(--bd);border-color:var(--bb);color:var(--bl)}
+.btn-blue:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-green{background:var(--td);border-color:var(--tb);color:var(--tl)}
+.btn-green:hover{background:var(--teal);color:#111;border-color:var(--teal)}
+.btn-red{background:var(--cd);border-color:var(--cb);color:var(--cl)}
+.btn-amber{background:var(--ad);border-color:var(--ab);color:var(--al)}
+.btn-gold{background:var(--gd);border-color:var(--gb);color:var(--gl)}
+
+.pill{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px}
+.p-ok{background:var(--td);border:1px solid var(--tb);color:var(--tl)}
+.p-warn{background:var(--ad);border:1px solid var(--ab);color:var(--al)}
+.p-err{background:var(--cd);border:1px solid var(--cb);color:var(--cl)}
+.p-blue{background:var(--bd);border:1px solid var(--bb);color:var(--bl)}
+.p-purple{background:var(--pd);border:1px solid var(--pb);color:var(--pl)}
+
+/* ══════════════════════════════
+   SCREEN 1 · АНАЛИТИКА
+   ══════════════════════════════ */
+#screen-analytics{padding:20px 24px 60px}
+
+.period-tabs{display:flex;gap:4px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:3px;width:fit-content;margin-bottom:18px}
+.period-tab{font-family:var(--mono);font-size:10px;padding:5px 14px;border-radius:6px;cursor:pointer;color:var(--muted);transition:all .15s}
+.period-tab.on{background:var(--s4);color:var(--text);border:1px solid var(--b2)}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.kpi-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px;position:relative;overflow:hidden;transition:border-color .2s}
+.kpi-card:hover{border-color:var(--b2)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r2) var(--r2) 0 0}
+.kc-blue::before{background:linear-gradient(90deg,var(--blue),transparent)}
+.kc-green::before{background:linear-gradient(90deg,var(--teal),transparent)}
+.kc-amber::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.kc-purple::before{background:linear-gradient(90deg,var(--purple),transparent)}
+.kc-gold::before{background:linear-gradient(90deg,var(--gold),transparent)}
+.kc-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px}
+.kc-val{font-size:24px;font-weight:800;letter-spacing:-.025em;line-height:1;margin-bottom:3px}
+.kc-blue .kc-val{color:var(--bl)}
+.kc-green .kc-val{color:var(--tl)}
+.kc-amber .kc-val{color:var(--al)}
+.kc-purple .kc-val{color:var(--pl)}
+.kc-gold .kc-val{color:var(--gl)}
+.kc-sub{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.kc-trend{position:absolute;top:14px;right:14px;font-family:var(--mono);font-size:10px}
+.trend-up{color:var(--tl)}
+.trend-down{color:var(--cl)}
+
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.chart-box{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px}
+.cb-title{font-size:12px;font-weight:700;margin-bottom:14px}
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bc-row{display:flex;align-items:center;gap:10px}
+.bc-label{font-family:var(--mono);font-size:10px;color:var(--text2);width:100px;flex-shrink:0;text-align:right}
+.bc-bar-wrap{flex:1;height:6px;background:var(--b1);border-radius:3px;overflow:hidden}
+.bc-bar{height:6px;border-radius:3px;transition:width .8s ease}
+.bc-val{font-family:var(--mono);font-size:10px;color:var(--muted);width:50px;text-align:right;flex-shrink:0}
+
+.roi-block{background:linear-gradient(135deg,var(--gd),var(--bd));border:1px solid var(--gb);border-radius:var(--r2);padding:20px 24px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.roi-item{}
+.roi-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px}
+.roi-val{font-size:28px;font-weight:800;letter-spacing:-.025em;color:var(--gl);margin-bottom:3px}
+.roi-sub{font-family:var(--mono);font-size:10px;color:var(--text2)}
+
+/* ══════════════════════════════
+   SCREEN 2 · АГЕНТЫ
+   ══════════════════════════════ */
+#screen-agents{padding:20px 24px 60px}
+
+.agents-overview{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.ao-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:14px;text-align:center}
+.ao-val{font-size:22px;font-weight:800;margin-bottom:3px}
+.ao-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+
+.agent-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);margin-bottom:10px;overflow:hidden;transition:all .2s}
+.agent-card:hover{border-color:var(--b2)}
+.ac-head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer}
+.ac-icon{font-size:20px;flex-shrink:0}
+.ac-info{flex:1}
+.ac-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.ac-type{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.ac-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.ac-stats{display:flex;gap:14px}
+.ac-stat{text-align:right}
+.ac-stat-val{font-family:var(--mono);font-size:12px;font-weight:600}
+.ac-stat-label{font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:1px}
+.ac-toggle{width:36px;height:20px;border-radius:10px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.ac-toggle.on{background:var(--teal)}
+.ac-toggle.off{background:var(--b2)}
+.ac-toggle::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:3px;transition:left .2s}
+.ac-toggle.on::after{left:19px}
+.ac-toggle.off::after{left:3px}
+
+.ac-body{border-top:1px solid var(--b0);padding:14px 18px;display:none}
+.ac-body.open{display:block}
+.log-entry{display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid var(--b0);font-family:var(--mono);font-size:10px}
+.log-entry:last-child{border-bottom:none}
+.log-time{color:var(--dim);flex-shrink:0;width:42px}
+.log-level{flex-shrink:0}
+.log-text{color:var(--text2);flex:1;line-height:1.5}
+
+/* Sparkline mini */
+.sparkline{display:flex;align-items:flex-end;gap:2px;height:30px}
+.spark-bar{border-radius:2px 2px 0 0;min-width:6px;transition:height .3s}
+
+/* ══════════════════════════════
+   SCREEN 3 · НАСТРОЙКИ
+   ══════════════════════════════ */
+#screen-settings{padding:20px 24px 60px}
+
+.settings-grid{display:grid;grid-template-columns:220px 1fr;gap:16px}
+.settings-nav{display:flex;flex-direction:column;gap:2px;position:sticky;top:0}
+.sn-item{font-family:var(--mono);font-size:11px;padding:8px 12px;border-radius:var(--r);cursor:pointer;color:var(--muted);transition:all .15s;border:1px solid transparent}
+.sn-item:hover{background:var(--b0);color:var(--text2)}
+.sn-item.on{background:var(--gd);border-color:var(--gb);color:var(--gl)}
+.settings-content{min-width:0}
+
+.sblock{display:none}
+.sblock.active{display:block}
+.sblock-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.sblock-desc{font-size:12px;color:var(--muted);margin-bottom:16px;font-family:var(--mono)}
+
+.field-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--b0)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:13px;font-weight:500}
+.field-desc{font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+.field-control{flex-shrink:0;margin-left:20px}
+
+.input-field{background:var(--s3);border:1px solid var(--b1);border-radius:var(--r);padding:7px 12px;color:var(--text);font-family:var(--mono);font-size:11px;width:180px;outline:none;transition:border-color .15s}
+.input-field:focus{border-color:var(--bb)}
+.input-field::-webkit-inner-spin-button{-webkit-appearance:none}
+
+.toggle-switch{width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle-switch.on{background:var(--teal)}
+.toggle-switch.off{background:var(--b2)}
+.toggle-switch::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;transition:left .2s}
+.toggle-switch.on::after{left:21px}
+.toggle-switch.off::after{left:3px}
+
+.select-field{background:var(--s3);border:1px solid var(--b1);border-radius:var(--r);padding:7px 12px;color:var(--text);font-family:var(--mono);font-size:11px;width:180px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234e6080'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+
+.sku-table{width:100%;border-collapse:collapse}
+.sku-table th{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding:8px 12px;border-bottom:1px solid var(--b0);text-align:left}
+.sku-table td{padding:8px 12px;font-size:12px;border-bottom:1px solid var(--b0);vertical-align:middle}
+.sku-table tr:last-child td{border-bottom:none}
+.sku-table tr:hover td{background:rgba(255,255,255,.015)}
+.sku-code{font-family:var(--mono);font-size:10px;color:var(--bl)}
+
+.role-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--b0)}
+.role-row:last-child{border-bottom:none}
+.role-avatar{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.role-info{flex:1}
+.role-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.role-email{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.role-badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px}
+
+.integration-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--b0)}
+.integration-row:last-child{border-bottom:none}
+.ir-left{display:flex;align-items:center;gap:12px}
+.ir-icon{font-size:20px}
+.ir-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.ir-detail{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.ir-right{display:flex;align-items:center;gap:8px}
+.ir-latency{font-family:var(--mono);font-size:10px;color:var(--text2)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--s3);border:1px solid var(--tb);border-radius:var(--r);padding:9px 16px;font-family:var(--mono);font-size:11px;color:var(--tl);z-index:100;transition:transform .3s cubic-bezier(.22,.68,0,1.2);white-space:nowrap;pointer-events:none;opacity:0}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.kpi-card{animation:fadeUp .3s ease both}
+.kpi-card:nth-child(1){animation-delay:.03s}
+.kpi-card:nth-child(2){animation-delay:.06s}
+.kpi-card:nth-child(3){animation-delay:.09s}
+.kpi-card:nth-child(4){animation-delay:.12s}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="tb-l">
+    <div class="tb-logo">Sinq<em> OS</em></div>
+    <div class="tb-sep"></div>
+    <span class="tb-badge">Admin</span>
+    <span class="tb-role-name">Администратор</span>
+  </div>
+  <div class="tb-r">
+    <div class="tb-status"><div class="ts-dot"></div>Все системы активны</div>
+    <div class="tb-time" id="clock"></div>
+    <div class="tb-user"><div class="av">АД</div>admin@veyseloglu.az</div>
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="nav-label">Панель управления</div>
+  <div class="nav-item active" onclick="switchScreen('analytics',this)" id="nav-analytics">
+    <span class="nav-icon">📊</span> Аналитика
+  </div>
+  <div class="nav-item" onclick="switchScreen('agents',this)" id="nav-agents">
+    <span class="nav-icon">🤖</span> Агенты
+  </div>
+  <div class="nav-item" onclick="switchScreen('settings',this)" id="nav-settings">
+    <span class="nav-icon">⚙️</span> Настройки
+  </div>
+
+  <div class="nav-item" onclick="switchScreen('sysagent',this)" id="nav-sysagent">
+    <span class="nav-icon">🛠</span> Системный агент
+  </div>
+
+  <div class="nav-label">Навигация</div>
+  <div class="nav-item" onclick="location.href='index.html'">
+    <span class="nav-icon">🔐</span> Логин
+  </div>
+  <div class="nav-item" onclick="location.href='veyseloglu_operator.html'">
+    <span class="nav-icon">📄</span> Оператор
+  </div>
+  <div class="nav-item" onclick="location.href='veyseloglu_manager.html'">
+    <span class="nav-icon">📊</span> Менеджер
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="sys-health">
+      <div class="sh-label">Статус систем</div>
+      <div class="sh-row"><span class="sh-name">1С УТ</span><span class="sh-val sh-ok">online</span></div>
+      <div class="sh-row"><span class="sh-name">Supabase</span><span class="sh-val sh-ok">online</span></div>
+      <div class="sh-row"><span class="sh-name">Claude API</span><span class="sh-val sh-ok">online</span></div>
+      <div class="sh-row"><span class="sh-name">Email IMAP</span><span class="sh-val sh-ok">online</span></div>
+      <div class="sh-row"><span class="sh-name">WhatsApp</span><span class="sh-val sh-warn">настройка</span></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <div class="ph-date" id="ph-date"></div>
+      <div class="ph-title" id="ph-title">Аналитика · операционные метрики</div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-gold" onclick="toast('PDF отчёт сгенерирован')">📄 Экспорт PDF</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="page-tabs">
+    <div class="pt on" onclick="switchScreen('analytics',null,this)">
+      <div class="pt-dot" style="background:var(--gold)"></div> Аналитика
+    </div>
+    <div class="pt" onclick="switchScreen('agents',null,this)">
+      <div class="pt-dot" style="background:var(--purple)"></div> Агенты
+    </div>
+    <div class="pt" onclick="switchScreen('sysagent',null,this)">
+      <div class="pt-dot" style="background:var(--teal)"></div> Системный агент
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN: ANALYTICS ════════ -->
+  <div class="screen active" id="screen-analytics">
+
+    <div style="padding:16px 24px 0">
+      <div class="period-tabs">
+        <div class="period-tab on" onclick="setPeriod('may',this)">Май 2026</div>
+        <div class="period-tab" onclick="setPeriod('q1',this)">Q1 2026</div>
+        <div class="period-tab" onclick="setPeriod('year',this)">Год</div>
+      </div>
+    </div>
+
+    <div style="padding:0 24px 60px">
+
+      <!-- ROI блок -->
+      <div class="roi-block">
+        <div class="roi-item">
+          <div class="roi-label">Экономия ФОТ · май</div>
+          <div class="roi-val">147 200 ₼</div>
+          <div class="roi-sub">15 операторов → 2 · разница зарплат</div>
+        </div>
+        <div class="roi-item">
+          <div class="roi-label">Поймано расхождений</div>
+          <div class="roi-val">38 600 ₼</div>
+          <div class="roi-sub">возврат корректировочными счетами</div>
+        </div>
+        <div class="roi-item">
+          <div class="roi-label">ROI системы · май</div>
+          <div class="roi-val">22.4×</div>
+          <div class="roi-sub">185 800 ₼ эффект / 8 300 ₼ стоимость</div>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-grid">
+        <div class="kpi-card kc-blue">
+          <div class="kc-label">Накладных обработано</div>
+          <div class="kc-val">1 847</div>
+          <div class="kc-sub">за май 2026</div>
+          <div class="kc-trend trend-up">↑ 12%</div>
+        </div>
+        <div class="kpi-card kc-green">
+          <div class="kc-label">Автоматизация</div>
+          <div class="kc-val">94.2%</div>
+          <div class="kc-sub">без оператора</div>
+          <div class="kc-trend trend-up">↑ 2.1%</div>
+        </div>
+        <div class="kpi-card kc-amber">
+          <div class="kc-label">Среднее время</div>
+          <div class="kc-val">2.4 мин</div>
+          <div class="kc-sub">было 28 мин</div>
+          <div class="kc-trend trend-up">↓ −14%</div>
+        </div>
+        <div class="kpi-card kc-purple">
+          <div class="kc-label">Стоимость AI</div>
+          <div class="kc-val">$840</div>
+          <div class="kc-sub">~$0.016 / накладная</div>
+          <div class="kc-trend" style="color:var(--muted)">стабильно</div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card kc-green">
+          <div class="kc-label">Претензий отправлено</div>
+          <div class="kc-val">47</div>
+          <div class="kc-sub">ответ получен по 31</div>
+          <div class="kc-trend trend-up">↑ 8</div>
+        </div>
+        <div class="kpi-card kc-amber">
+          <div class="kc-label">Потери «склад→магазин»</div>
+          <div class="kc-val">4 320 ₼</div>
+          <div class="kc-sub">287 единиц · Araz Xətai 43%</div>
+          <div class="kc-trend trend-down">↑ риск</div>
+        </div>
+        <div class="kpi-card kc-blue">
+          <div class="kc-label">Поставщиков в системе</div>
+          <div class="kc-val">54</div>
+          <div class="kc-sub">6 с активными претензиями</div>
+        </div>
+        <div class="kpi-card kc-gold">
+          <div class="kc-label">Uptime системы</div>
+          <div class="kc-val">99.8%</div>
+          <div class="kc-sub">1 ч простоя за месяц</div>
+          <div class="kc-trend trend-up">↑ стабильно</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-box">
+          <div class="cb-title">Расхождения по поставщикам · май</div>
+          <div class="bar-chart" id="supplier-chart"></div>
+        </div>
+        <div class="chart-box">
+          <div class="cb-title">Вызовы агентов за день</div>
+          <div class="bar-chart" id="agent-calls-chart"></div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-box">
+          <div class="cb-title">Потери по магазинам · май ₼</div>
+          <div class="bar-chart" id="store-loss-chart"></div>
+        </div>
+        <div class="chart-box">
+          <div class="cb-title">Динамика автоматизации · % накладных без оператора</div>
+          <div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:10px" id="automation-chart"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN: AGENTS ════════ -->
+  <div class="screen" id="screen-agents">
+    <div style="padding:20px 24px 60px">
+
+      <div class="agents-overview">
+        <div class="ao-card">
+          <div class="ao-val" style="color:var(--tl)">6/6</div>
+          <div class="ao-label">Активных агентов</div>
+        </div>
+        <div class="ao-card">
+          <div class="ao-val" style="color:var(--bl)">1 847</div>
+          <div class="ao-label">Задач сегодня</div>
+        </div>
+        <div class="ao-card">
+          <div class="ao-val" style="color:var(--al)">3</div>
+          <div class="ao-label">Ошибок за неделю</div>
+        </div>
+        <div class="ao-card">
+          <div class="ao-val" style="color:var(--pl)">99.8%</div>
+          <div class="ao-label">Uptime</div>
+        </div>
+      </div>
+
+      <div id="agents-list"></div>
+
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN: SETTINGS ════════ -->
+  <div class="screen" id="screen-settings">
+    <div style="padding:20px 24px 60px">
+      <div class="settings-grid">
+
+        <!-- Settings nav -->
+        <div class="settings-nav">
+          <div class="sn-item on" onclick="switchSettings('thresholds',this)">⚡ Пороги уведомлений</div>
+          <div class="sn-item" onclick="switchSettings('sku',this)">📖 Справочник SKU</div>
+          <div class="sn-item" onclick="switchSettings('roles',this)">👥 Роли и доступы</div>
+          <div class="sn-item" onclick="switchSettings('integrations',this)">🔗 Интеграции</div>
+          <div class="sn-item" onclick="switchSettings('audit',this)">📋 Audit Log</div>
+        </div>
+
+        <!-- Settings content -->
+        <div class="settings-content">
+
+          <!-- ПОРОГИ -->
+          <div class="sblock active" id="sb-thresholds">
+            <div class="sblock-title">Пороги уведомлений</div>
+            <div class="sblock-desc">При каких значениях агенты создают задачи в Inbox</div>
+            <div class="panel">
+              <div class="panel-body">
+                <div class="field-row">
+                  <div>
+                    <div class="field-label">Расхождение цены (% от заказа)</div>
+                    <div class="field-desc">Выше этого — автоматическая претензия</div>
+                  </div>
+                  <div class="field-control">
+                    <input class="input-field" type="number" value="5" min="1" max="50" id="price-threshold">
+                    <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px">%</span>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div>
+                    <div class="field-label">Остаток товара (дней)</div>
+                    <div class="field-desc">Меньше — алерт критично в Inbox</div>
+                  </div>
+                  <div class="field-control">
+                    <input class="input-field" type="number" value="3" min="1" max="30">
+                    <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px">дн.</span>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div>
+                    <div class="field-label">Точность приёмки магазина (%)</div>
+                    <div class="field-desc">Ниже — алерт в раздел Магазины</div>
+                  </div>
+                  <div class="field-control">
+                    <input class="input-field" type="number" value="90" min="50" max="100">
+                    <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px">%</span>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div>
+                    <div class="field-label">Потери в пути (₼ за месяц)</div>
+                    <div class="field-desc">Выше — алерт аномалиста</div>
+                  </div>
+                  <div class="field-control">
+                    <input class="input-field" type="number" value="1000" min="100" max="50000">
+                    <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px">₼</span>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div>
+                    <div class="field-label">Претензии автоматически</div>
+                    <div class="field-desc">Отправлять без подтверждения менеджера</div>
+                  </div>
+                  <div class="field-control">
+                    <div class="toggle-switch off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>
+                  </div>
+                </div>
+                <div class="field-row">
+                  <div>
+                    <div class="field-label">Email уведомления менеджеру</div>
+                    <div class="field-desc">Дублировать срочные задачи на email</div>
+                  </div>
+                  <div class="field-control">
+                    <div class="toggle-switch on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-green" onclick="toast('Настройки сохранены')">✓ Сохранить</button>
+          </div>
+
+          <!-- SKU СПРАВОЧНИК -->
+          <div class="sblock" id="sb-sku">
+            <div class="sblock-title">Справочник SKU</div>
+            <div class="sblock-desc">Маппинг наименований поставщиков на номенклатуру 1С</div>
+            <div class="panel">
+              <div class="panel-head">
+                <span class="ph-sm">Активные маппинги</span>
+                <div style="display:flex;gap:5px">
+                  <button class="btn" onclick="toast('CSV импортирован')">📥 Импорт CSV</button>
+                  <button class="btn btn-blue" onclick="toast('Новый маппинг добавлен')">+ Добавить</button>
+                </div>
+              </div>
+              <div style="overflow-x:auto">
+                <table class="sku-table">
+                  <thead>
+                    <tr>
+                      <th>Код 1С</th>
+                      <th>Наименование поставщика</th>
+                      <th>Поставщик</th>
+                      <th>Совпадений</th>
+                      <th>Действие</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sku-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- РОЛИ -->
+          <div class="sblock" id="sb-roles">
+            <div class="sblock-title">Роли и доступы</div>
+            <div class="sblock-desc">Пользователи системы и их права</div>
+            <div class="panel">
+              <div class="panel-head">
+                <span class="ph-sm">Активные пользователи</span>
+                <button class="btn btn-blue" onclick="toast('Приглашение отправлено')">+ Пригласить</button>
+              </div>
+              <div class="panel-body" id="roles-list"></div>
+            </div>
+          </div>
+
+          <!-- ИНТЕГРАЦИИ -->
+          <div class="sblock" id="sb-integrations">
+            <div class="sblock-title">Интеграции</div>
+            <div class="sblock-desc">Статус подключений к внешним системам</div>
+            <div class="panel">
+              <div class="panel-body" id="integrations-list"></div>
+            </div>
+          </div>
+
+          <!-- AUDIT LOG -->
+          <div class="sblock" id="sb-audit">
+            <div class="sblock-title">Audit Log</div>
+            <div class="sblock-desc">Полная история действий агентов и пользователей</div>
+            <div class="panel">
+              <div class="panel-head">
+                <span class="ph-sm">Последние события</span>
+                <div style="display:flex;gap:5px">
+                  <select class="select-field" style="width:140px">
+                    <option>Все события</option>
+                    <option>Агенты</option>
+                    <option>Операторы</option>
+                    <option>Менеджер</option>
+                    <option>Система</option>
+                  </select>
+                  <button class="btn" onclick="toast('Лог экспортирован')">📥 Экспорт</button>
+                </div>
+              </div>
+              <div id="audit-log" style="padding:4px 0;max-height:400px;overflow-y:auto"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN: SYSTEM AGENT ════════ -->
+  <div class="screen" id="screen-sysagent" style="flex-direction:row;overflow:hidden">
+
+    <!-- LEFT: QUICK ACTIONS -->
+    <div style="width:240px;flex-shrink:0;border-right:1px solid var(--b1);background:var(--s1);display:flex;flex-direction:column;padding:14px 10px;gap:4px;overflow-y:auto">
+      <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);padding:0 8px;margin-bottom:4px">Быстрые команды</div>
+
+      <div class="sa-cmd" onclick="sendSysCmd('Покажи статус всех агентов прямо сейчас')">📊 Статус агентов</div>
+      <div class="sa-cmd" onclick="sendSysCmd('Какие ошибки были за последние 24 часа?')">🔴 Ошибки за 24 часа</div>
+      <div class="sa-cmd" onclick="sendSysCmd('Почему SKU-матчер не нашёл позицию?')">🔍 Диагностика SKU</div>
+      <div class="sa-cmd" onclick="sendSysCmd('Проверь подключение к 1С УТ')">🏛 Проверить 1С</div>
+      <div class="sa-cmd" onclick="sendSysCmd('Сколько токенов потрачено на Claude API сегодня?')">💰 Расход токенов</div>
+      <div class="sa-cmd" onclick="sendSysCmd('Есть ли накладные застрявшие в очереди?')">⏳ Застрявшие задачи</div>
+      <div class="sa-cmd" onclick="sendSysCmd('Оптимальны ли текущие пороги уведомлений?')">⚙️ Проверить пороги</div>
+      <div class="sa-cmd" onclick="sendSysCmd('Покажи топ-3 узких мест производительности')">⚡ Узкие места</div>
+      <div class="sa-cmd" onclick="sendSysCmd('Почему WhatsApp до сих пор не подключён?')">💬 WhatsApp статус</div>
+      <div class="sa-cmd" onclick="sendSysCmd('Сделай полный health check системы')">🏥 Full health check</div>
+
+      <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);padding:0 8px;margin:10px 0 4px">Последние диалоги</div>
+      <div class="sa-hist" onclick="loadHistory('health')">Health check · вчера 09:12</div>
+      <div class="sa-hist" onclick="loadHistory('sku')">SKU-ошибка ProFood · 14 мая</div>
+      <div class="sa-hist" onclick="loadHistory('timeout')">Timeout OCR · 13 мая</div>
+    </div>
+
+    <!-- CENTER: CHAT -->
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden">
+
+      <!-- Chat header -->
+      <div style="padding:12px 18px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:12px;flex-shrink:0">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--td);border:1px solid var(--tb);display:flex;align-items:center;justify-content:center;font-size:18px">🛠</div>
+        <div>
+          <div style="font-size:13px;font-weight:700">Системный агент · Sinq OS</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">Диагностика · управление · DevOps</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <div class="ts-dot"></div>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--tl)">Claude API · подключён</span>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div id="sa-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <!-- Initial greeting -->
+        <div class="sa-msg sa-agent">
+          <div class="sa-bubble">
+            <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--tl);margin-bottom:6px">🛠 Системный агент</div>
+            Здравствуйте. Я системный агент Sinq OS — знаю всё о состоянии платформы, агентах, интеграциях и ошибках.<br><br>
+            Могу диагностировать проблемы, объяснить почему что-то пошло не так, проверить подключения и предложить решение. Что проверяем?
+          </div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:4px">09:00 · сегодня</div>
+        </div>
+      </div>
+
+      <!-- Thinking indicator (hidden) -->
+      <div id="sa-thinking" style="display:none;padding:0 16px 8px">
+        <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted)">
+          <div class="sa-dots"><span></span><span></span><span></span></div>
+          Агент анализирует…
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div style="border-top:1px solid var(--b1);background:var(--s1);padding:10px 14px;flex-shrink:0">
+        <div style="display:flex;align-items:flex-end;gap:8px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;padding:6px 10px">
+          <textarea id="sa-field" placeholder="Спросите агента о состоянии системы…"
+            style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:13px;resize:none;min-height:22px;max-height:120px;line-height:1.5"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
+            onkeydown="if(event.key==='Enter'&&(event.metaKey||event.ctrlKey))sendSysMsg()"></textarea>
+          <button onclick="sendSysMsg()" style="width:32px;height:32px;border-radius:8px;background:var(--teal);border:none;color:#111;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''">↑</button>
+        </div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--dim);padding:4px 4px 0">Cmd+Enter · ответ через Claude API · все данные из системы</div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<style>
+.sa-cmd{
+  font-family:var(--mono);font-size:10px;padding:8px 12px;border-radius:var(--r);
+  border:1px solid var(--b1);background:transparent;color:var(--text2);
+  cursor:pointer;transition:all .15s;line-height:1.4;
+}
+.sa-cmd:hover{background:var(--s2);border-color:var(--b2);color:var(--text)}
+.sa-hist{font-family:var(--mono);font-size:10px;padding:6px 12px;border-radius:var(--r);color:var(--dim);cursor:pointer;transition:all .15s;border:1px solid transparent}
+.sa-hist:hover{color:var(--text2);border-color:var(--b1);background:var(--b0)}
+
+.sa-msg{display:flex;flex-direction:column;animation:fadeUp .25s ease both}
+.sa-agent{align-items:flex-start}
+.sa-user{align-items:flex-end}
+.sa-bubble{max-width:80%;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.65;word-break:break-word;white-space:pre-wrap}
+.sa-agent .sa-bubble{background:var(--s2);border:1px solid var(--b1);border-radius:3px 12px 12px 12px;color:var(--text)}
+.sa-user .sa-bubble{background:linear-gradient(135deg,#1a40c0,#1e3aaa);border:1px solid rgba(59,130,246,.3);border-radius:12px 12px 3px 12px;color:#fff}
+
+.sa-code{font-family:var(--mono);font-size:11px;background:var(--s3);border:1px solid var(--b1);border-radius:var(--r);padding:10px 13px;margin:8px 0;line-height:1.6;overflow-x:auto;white-space:pre}
+.sa-status-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--b0);font-family:var(--mono);font-size:11px}
+.sa-status-row:last-child{border-bottom:none}
+
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.sa-dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--muted);margin:0 2px;animation:bounce 1.2s ease infinite}
+.sa-dots span:nth-child(2){animation-delay:.15s}
+.sa-dots span:nth-child(3){animation-delay:.3s}
+</style>
+
+<script>
+// ── CLOCK ──
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})+' · '+
+    n.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  const pd=document.getElementById('ph-date');
+  if(pd) pd.textContent=n.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+}
+tick();setInterval(tick,30000);
+
+// ── NAV ──
+function switchScreen(id,navEl,tabEl){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.pt').forEach(t=>t.classList.remove('on'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(navEl){navEl.classList.add('active');}
+  else{document.getElementById('nav-'+id)?.classList.add('active');}
+  if(tabEl) tabEl.classList.add('on');
+  const titles={
+    analytics:'Аналитика · операционные метрики',
+    agents:'Агенты · мониторинг и управление',
+    settings:'Настройки · конфигурация системы',
+    sysagent:'Системный агент · диагностика и управление',
+  };
+  document.getElementById('ph-title').textContent=titles[id]||'';
+  const showExport=id==='analytics';
+  document.querySelector('.ph-actions').style.display=showExport?'flex':'none';
+  if(id==='agents') renderAgents();
+  if(id==='settings') renderSettings();
+}
+
+// ── PERIOD ──
+function setPeriod(p,el){
+  document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  toast('Данные за период обновлены');
+}
+
+// ── CHARTS ──
+const supplierData=[
+  {name:'Parvaз Group',val:18600,pct:48,color:'var(--coral)'},
+  {name:'Coca-Cola AZ',val:9400,pct:24,color:'var(--amber)'},
+  {name:'ProFood LLC',val:6200,pct:16,color:'var(--amber)'},
+  {name:'Araz Dairy',val:3200,pct:8,color:'var(--blue)'},
+  {name:'Прочие',val:1200,pct:4,color:'var(--muted)'},
+];
+const agentCallsData=[
+  {name:'OCR-агент',val:1847,pct:100,color:'var(--purple)'},
+  {name:'SKU-матчер',val:1847,pct:100,color:'var(--purple)'},
+  {name:'Сверщик',val:1847,pct:100,color:'var(--blue)'},
+  {name:'Прогноз',val:288,pct:16,color:'var(--teal)'},
+  {name:'Аномалист',val:156,pct:8,color:'var(--coral)'},
+  {name:'Переговорщик',val:47,pct:3,color:'var(--amber)'},
+];
+const storeLossData=[
+  {name:'Araz Xətai',val:2840,pct:66,color:'var(--coral)'},
+  {name:'OBA Gənclik',val:420,pct:10,color:'var(--amber)'},
+  {name:'Rossmann Nizami',val:520,pct:12,color:'var(--amber)'},
+  {name:'Araz Əhmədli',val:540,pct:13,color:'var(--blue)'},
+];
+
+function renderBarChart(containerId,data,unit=''){
+  document.getElementById(containerId).innerHTML=data.map(d=>`
+    <div class="bc-row">
+      <div class="bc-label">${d.name}</div>
+      <div class="bc-bar-wrap"><div class="bc-bar" style="width:${d.pct}%;background:${d.color}"></div></div>
+      <div class="bc-val">${typeof d.val==='number'&&d.val>999?d.val.toLocaleString('ru-RU'):d.val}${unit}</div>
+    </div>`).join('');
+}
+
+const automationData=[78,80,83,86,88,90,91,92,93,94,94,94];
+function renderAutomation(){
+  const max=Math.max(...automationData);
+  document.getElementById('automation-chart').innerHTML=automationData.map((v,i)=>`
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--muted)">${v}%</div>
+      <div class="spark-bar" style="width:100%;height:${Math.round(v/max*60)+4}px;background:${i===automationData.length-1?'var(--teal)':'var(--b2)'};border-radius:2px 2px 0 0"></div>
+    </div>`).join('');
+}
+
+setTimeout(()=>{
+  renderBarChart('supplier-chart',supplierData,' ₼');
+  renderBarChart('agent-calls-chart',agentCallsData,'');
+  renderBarChart('store-loss-chart',storeLossData,' ₼');
+  renderAutomation();
+},100);
+
+// ── AGENTS DATA ──
+const agentsData=[
+  {icon:'🔄',name:'Агент-агрегатор',type:'Код · Node.js',status:'ok',tasks:288,errors:0,avgMs:120,
+   logs:[
+     {time:'14:22',level:'ok',text:'Синхронизация остатков завершена · 1 847 SKU обновлено'},
+     {time:'14:17',level:'ok',text:'Центральный склад прочитан · 2 108 позиций'},
+     {time:'14:17',level:'ok',text:'18 магазинов синхронизировано через 1С XML-обмен'},
+     {time:'09:00',level:'ok',text:'Ночная синхронизация завершена · 247 SKU изменились'},
+   ]},
+  {icon:'🤖',name:'OCR-агент',type:'AI · GPT-4o Vision',status:'ok',tasks:1847,errors:12,avgMs:8400,
+   logs:[
+     {time:'14:28',level:'ok',text:'Накладная #ПГ-1198 распознана · 31 позиция · 99.2% точность'},
+     {time:'14:15',level:'warn',text:'Накладная #АФ-2853 · качество фото низкое · точность 81% · передано оператору'},
+     {time:'13:44',level:'ok',text:'е-Qaimə документ распознан автоматически · 100%'},
+     {time:'11:22',level:'err',text:'Timeout при обращении к GPT-4o API · повтор через 30с · успешно'},
+   ]},
+  {icon:'🔍',name:'SKU-матчер',type:'AI · pgvector + Claude',status:'ok',tasks:1847,errors:28,avgMs:340,
+   logs:[
+     {time:'14:28',level:'ok',text:'31 позиция сматчена · 30 точно · 1 приближённо (масло 82%)'},
+     {time:'14:15',level:'warn',text:'ProFood #ПФ-8821 · 4 SKU не найдены · новые наименования поставщика'},
+     {time:'12:10',level:'ok',text:'Справочник обновлён · добавлено 3 новых маппинга из portala'},
+   ]},
+  {icon:'⚖️',name:'Сверщик заказа',type:'Код · детерминированный',status:'ok',tasks:1847,errors:0,avgMs:45,
+   logs:[
+     {time:'14:28',level:'warn',text:'#ПГ-1198 · расхождение цены +11.1% на 31 позицию · 4 820 ₼'},
+     {time:'14:20',level:'ok',text:'#АФ-2847 · всё совпадает · проведено автоматически'},
+     {time:'13:15',level:'warn',text:'#КК-0912 · количество -12 ед. · акт расхождений создан'},
+   ]},
+  {icon:'🔮',name:'Агент-прогноз',type:'AI · ML-модель',status:'ok',tasks:156,errors:0,avgMs:2100,
+   logs:[
+     {time:'09:02',level:'warn',text:'Масло сл. 82% · критично · 3 дня · рекомендовано заказать срочно'},
+     {time:'09:01',level:'warn',text:'Кефир 1% · 2.4 дня · добавлено в Inbox Ирады'},
+     {time:'09:00',level:'ok',text:'Прогноз пересчитан · 14 SKU критично · 38 в зоне внимания'},
+   ]},
+  {icon:'📨',name:'Агент-переговорщик',type:'AI · Claude Sonnet',status:'ok',tasks:47,errors:1,avgMs:3200,
+   logs:[
+     {time:'14:28',level:'ok',text:'Претензия Parvaз #ПГ-1192 сформирована · 4 820 ₼ · ждёт подписи'},
+     {time:'11:00',level:'ok',text:'Ответ на запрос Şərq Şərab о продлении договора сформирован'},
+     {time:'09:45',level:'err',text:'Ошибка генерации · токенов недостаточно · повтор · успешно'},
+   ]},
+];
+
+function renderAgents(){
+  document.getElementById('agents-list').innerHTML=agentsData.map((a,i)=>`
+    <div class="agent-card">
+      <div class="ac-head" onclick="toggleAgentLog(${i})">
+        <div class="ac-icon">${a.icon}</div>
+        <div class="ac-info">
+          <div class="ac-name">${a.name}</div>
+          <div class="ac-type">${a.type}</div>
+        </div>
+        <div class="ac-stats">
+          <div class="ac-stat">
+            <div class="ac-stat-val" style="color:var(--bl)">${a.tasks.toLocaleString('ru-RU')}</div>
+            <div class="ac-stat-label">задач сегодня</div>
+          </div>
+          <div class="ac-stat">
+            <div class="ac-stat-val" style="color:${a.errors>5?'var(--cl)':a.errors>0?'var(--al)':'var(--tl)'}">${a.errors}</div>
+            <div class="ac-stat-label">ошибок</div>
+          </div>
+          <div class="ac-stat">
+            <div class="ac-stat-val" style="color:var(--text2)">${a.avgMs<1000?a.avgMs+'мс':(a.avgMs/1000).toFixed(1)+'с'}</div>
+            <div class="ac-stat-label">среднее</div>
+          </div>
+        </div>
+        <span class="pill ${a.status==='ok'?'p-ok':a.status==='warn'?'p-warn':'p-err'}">${a.status==='ok'?'Активен':a.status==='warn'?'Внимание':'Ошибка'}</span>
+        <div class="ac-toggle on" onclick="event.stopPropagation();toggleAgent(this,'${a.name}')"></div>
+      </div>
+      <div class="ac-body" id="agent-body-${i}">
+        <div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px">Последние события</div>
+        ${a.logs.map(l=>`
+          <div class="log-entry">
+            <span class="log-time">${l.time}</span>
+            <span class="log-level pill ${l.level==='ok'?'p-ok':l.level==='warn'?'p-warn':'p-err'}">${l.level}</span>
+            <span class="log-text">${l.text}</span>
+          </div>`).join('')}
+        <div style="margin-top:12px;display:flex;gap:6px">
+          <button class="btn" onclick="toast('Лог ${a.name} экспортирован')">📥 Лог</button>
+          <button class="btn btn-amber" onclick="toast('${a.name} перезапущен')">↻ Перезапустить</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleAgentLog(i){
+  const b=document.getElementById('agent-body-'+i);
+  b.classList.toggle('open');
+}
+function toggleAgent(el,name){
+  el.classList.toggle('on');
+  el.classList.toggle('off');
+  const isOn=el.classList.contains('on');
+  toast((isOn?'▶ Агент включён: ':'⏸ Агент остановлен: ')+name);
+}
+
+// ── SETTINGS DATA ──
+const skuData=[
+  {code:'PV-MSL-82',supplier:'Масло сливочное 82% 200г ПАРВАЗ',vendor:'Parvaз Group',matches:148},
+  {code:'AR-KFR-01',supplier:'Кефир 1% 0.5л Araz',vendor:'Araz Food',matches:212},
+  {code:'AR-MLK-25',supplier:'Молоко 2.5% 1л Araz Food',vendor:'Araz Food',matches:198},
+  {code:'CC-005-STB',supplier:'Coca-Cola 0.5л ст/б',vendor:'Coca-Cola AZ',matches:340},
+  {code:'PV-YAY-S1',supplier:'Яйцо куриное С1 10шт',vendor:'Parvaз Group',matches:88},
+];
+const rolesData=[
+  {name:'Лейла Мамедова',email:'leyla@veyseloglu.az',role:'Оператор',bg:'background:var(--pd);border:1px solid var(--pb)',badge:'p-purple',icon:'👩‍💼'},
+  {name:'Ирада Гусейнова',email:'irada@veyseloglu.az',role:'Менеджер',bg:'background:var(--td);border:1px solid var(--tb)',badge:'p-ok',icon:'👩‍💼'},
+  {name:'Администратор',email:'admin@veyseloglu.az',role:'Админ',bg:'background:var(--gd);border:1px solid var(--gb)',badge:'p-blue',icon:'👨‍💻'},
+  {name:'Parvaз Group',email:'zakupki@parvaz.az',role:'Поставщик',bg:'background:var(--ad);border:1px solid var(--ab)',badge:'p-warn',icon:'🏭'},
+  {name:'Araz Food LLC',email:'zakupki@arazfood.az',role:'Поставщик',bg:'background:var(--td);border:1px solid var(--tb)',badge:'p-ok',icon:'🏭'},
+];
+const integrationsData=[
+  {icon:'🏛',name:'1С: Управление торговлей',detail:'COM-объект · читаем и пишем',status:'ok',latency:'~80мс'},
+  {icon:'📦',name:'Supabase / PostgreSQL',detail:'pgvector · эмбеддинги · audit log',status:'ok',latency:'~12мс'},
+  {icon:'🤖',name:'Claude API (Anthropic)',detail:'claude-sonnet-4-6 · tool use',status:'ok',latency:'~2.1с'},
+  {icon:'🔍',name:'GPT-4o Vision (OpenAI)',detail:'OCR накладных · Vision API',status:'ok',latency:'~8.4с'},
+  {icon:'📧',name:'Email IMAP (Outlook)',detail:'irada@veyseloglu.az · читаем входящие',status:'ok',latency:'~200мс'},
+  {icon:'💬',name:'WhatsApp Business API',detail:'Meta Cloud API · верификация',status:'warn',latency:'настройка'},
+  {icon:'📑',name:'е-Qaimə (АзерГолд)',detail:'API государственных накладных',status:'ok',latency:'~1.2с'},
+];
+const auditData=[
+  {time:'14:28:32',user:'OCR-агент',action:'Накладная #ПГ-1198 распознана',level:'ok'},
+  {time:'14:28:35',user:'Сверщик',action:'Расхождение +11.1% зафиксировано · 4 820 ₼',level:'warn'},
+  {time:'14:28:40',user:'Переговорщик',action:'Черновик претензии Parvaз сформирован',level:'ok'},
+  {time:'14:30:12',user:'Ирада Гусейнова',action:'Претензия #ПГ-1192 подписана и отправлена',level:'ok'},
+  {time:'14:15:08',user:'OCR-агент',action:'Накладная #АФ-2853 низкое качество фото · передано оператору',level:'warn'},
+  {time:'13:44:21',user:'OCR-агент',action:'е-Qaimə документ #ЕК-00441 обработан автоматически',level:'ok'},
+  {time:'11:22:05',user:'Переговорщик',action:'Timeout API · повтор · успешно',level:'err'},
+  {time:'09:30:00',user:'Администратор',action:'Настройки порогов обновлены',level:'ok'},
+  {time:'09:02:14',user:'Прогноз',action:'Алерт: Масло 82% · 3 дня · добавлено в Inbox',level:'warn'},
+  {time:'09:00:00',user:'Агрегатор',action:'Ночная синхронизация · 1 847 SKU · 18 магазинов',level:'ok'},
+  {time:'08:45:30',user:'Система',action:'Все агенты запущены · uptime сессии начат',level:'ok'},
+];
+
+function renderSettings(){
+  document.getElementById('sku-tbody').innerHTML=skuData.map(s=>`
+    <tr>
+      <td><span class="sku-code">${s.code}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${s.supplier}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">${s.vendor}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--tl)">${s.matches}</td>
+      <td><button class="btn" onclick="toast('Маппинг открыт для редактирования')">Изменить</button></td>
+    </tr>`).join('');
+
+  document.getElementById('roles-list').innerHTML=rolesData.map(r=>`
+    <div class="role-row">
+      <div class="role-avatar" style="${r.bg}">${r.icon}</div>
+      <div class="role-info">
+        <div class="role-name">${r.name}</div>
+        <div class="role-email">${r.email}</div>
+      </div>
+      <span class="role-badge pill ${r.badge}">${r.role}</span>
+      <button class="btn" style="margin-left:auto" onclick="toast('Права ${r.name} открыты')">Изменить</button>
+    </div>`).join('');
+
+  document.getElementById('integrations-list').innerHTML=integrationsData.map(i=>`
+    <div class="integration-row">
+      <div class="ir-left">
+        <div class="ir-icon">${i.icon}</div>
+        <div>
+          <div class="ir-name">${i.name}</div>
+          <div class="ir-detail">${i.detail}</div>
+        </div>
+      </div>
+      <div class="ir-right">
+        <span class="ir-latency">${i.latency}</span>
+        <span class="pill ${i.status==='ok'?'p-ok':'p-warn'}">${i.status==='ok'?'online':'настройка'}</span>
+        <button class="btn" onclick="toast('Подключение проверяется…')">Проверить</button>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('audit-log').innerHTML=auditData.map(e=>`
+    <div class="log-entry" style="padding:7px 18px">
+      <span class="log-time" style="width:66px">${e.time}</span>
+      <span class="pill ${e.level==='ok'?'p-ok':e.level==='warn'?'p-warn':'p-err'}" style="flex-shrink:0">${e.level}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text2);flex-shrink:0;width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.user}</span>
+      <span class="log-text">${e.action}</span>
+    </div>`).join('');
+}
+
+function switchSettings(id,el){
+  document.querySelectorAll('.sn-item').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('.sblock').forEach(x=>x.classList.remove('active'));
+  document.getElementById('sb-'+id).classList.add('active');
+}
+
+// ── SYSTEM AGENT ──
+const SYSTEM_CONTEXT = `Ты — Системный агент Sinq OS, платформы автоматизации приёмки и закупок для Veysəloğlu Group (ретейл-сеть OBA Market, Araz Market, Rossmann).
+
+СОСТОЯНИЕ СИСТЕМЫ (актуально на 16.05.2026 14:28):
+- Агентов активно: 6/6
+- Uptime сегодня: 99.8%
+- Накладных обработано за день: 1 847
+- Автоматизация: 94.2% (без оператора)
+- Ошибок за 24 часа: 3 (2 timeout API, 1 низкое качество фото)
+
+АГЕНТЫ:
+- OCR-агент (GPT-4o Vision): OK, 1847 задач, 12 ошибок за месяц, avg 8.4с
+- SKU-матчер (pgvector+Claude): OK, 1847 задач, 28 ошибок за месяц, avg 340мс
+- Сверщик заказа (код): OK, 1847 задач, 0 ошибок, avg 45мс
+- Агент-прогноз (ML): OK, 156 задач, 0 ошибок, avg 2.1с
+- Агент-аномалист (Claude): OK, 156 задач, 0 ошибок, avg 1.8с
+- Агент-переговорщик (Claude Sonnet): OK, 47 задач, 1 ошибка (timeout), avg 3.2с
+
+ИНТЕГРАЦИИ:
+- 1С УТ: online, ~80мс
+- Supabase: online, ~12мс
+- Claude API: online, ~2.1с
+- GPT-4o Vision: online, ~8.4с
+- Email IMAP: online, ~200мс
+- WhatsApp Business API: НАСТРОЙКА (верификация Meta в процессе, ~1-4 недели)
+- е-Qaimə: online, ~1.2с
+
+ПОСЛЕДНИЕ ОШИБКИ:
+- 11:22 — Переговорщик: timeout Claude API, повтор через 30с, успешно
+- 14:15 — OCR: низкое качество фото накладной #АФ-2853, точность 81%, передано оператору
+- Предыдущие дни: SKU-ошибка ProFood (новые наименования), timeout OCR
+
+МЕТРИКИ:
+- Расход токенов сегодня: ~420к input, ~85к output (~$0.84)
+- Очередь задач: 0 застрявших
+- Пороги: цена 5%, остаток 3 дня, точность магазина 90%, потери 1000₼
+
+СТЕК: Node.js, Supabase/PostgreSQL, pgvector, Claude API, GPT-4o Vision, 1С COM, n8n
+
+Отвечай как опытный DevOps/ML-инженер который знает эту систему изнутри. Конкретно, с цифрами, с рекомендациями. Если нужны действия — предлагай конкретные команды или настройки. Отвечай на русском.`;
+
+const saHistory = [];
+
+async function sendSysMsg() {
+  const field = document.getElementById('sa-field');
+  const text = field.value.trim();
+  if (!text) return;
+  field.value = ''; field.style.height = '';
+  addSaMsg(text, 'user');
+  await callSysAgent(text);
+}
+
+function sendSysCmd(cmd) {
+  document.getElementById('sa-field').value = cmd;
+  sendSysMsg();
+  // switch to agent tab if not already
+  if (!document.getElementById('screen-sysagent').classList.contains('active')) {
+    switchScreen('sysagent', document.getElementById('nav-sysagent'));
+  }
+}
+
+function addSaMsg(text, role) {
+  const msgs = document.getElementById('sa-messages');
+  const time = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'sa-msg sa-' + (role === 'user' ? 'user' : 'agent');
+  div.innerHTML = `
+    <div class="sa-bubble">${role === 'assistant' ? '<div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--tl);margin-bottom:6px">🛠 Системный агент</div>' : ''}${formatSaText(text)}</div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-top:4px">${time}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  saHistory.push({role, content: text});
+}
+
+function formatSaText(text) {
+  return text
+    .replace(/```([\s\S]*?)```/g, '<div class="sa-code">$1</div>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text)">$1</strong>')
+    .replace(/`([^`]+)`/g, '<code style="font-family:var(--mono);font-size:11px;background:var(--s3);padding:1px 5px;border-radius:4px;color:var(--bl)">$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+async function callSysAgent(userText) {
+  const thinking = document.getElementById('sa-thinking');
+  thinking.style.display = 'block';
+
+  try {
+    const messages = saHistory.slice(-10).map(m => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content
+    }));
+    // add current message
+    messages.push({role: 'user', content: userText});
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_CONTEXT,
+        messages
+      })
+    });
+
+    const data = await res.json();
+    thinking.style.display = 'none';
+
+    if (data.content && data.content[0]) {
+      const reply = data.content.map(b => b.text || '').join('');
+      addSaMsg(reply, 'assistant');
+    } else {
+      addSaMsg('Ошибка API: ' + (data.error?.message || JSON.stringify(data)), 'assistant');
+    }
+  } catch (e) {
+    thinking.style.display = 'none';
+    addSaMsg('Ошибка подключения к Claude API: ' + e.message, 'assistant');
+  }
+}
+
+function loadHistory(type) {
+  const histories = {
+    health: [
+      {role:'user', text:'Сделай полный health check системы'},
+      {role:'assistant', text:'**Health Check · 15.05.2026 09:12**\n\n**Агенты:** все 6 активны ✓\n**1С УТ:** online, 78мс ✓\n**Supabase:** online, 11мс ✓\n**Claude API:** online ✓\n\nОдна проблема: **WhatsApp** до сих пор на верификации Meta — уже 8 дней. Рекомендую написать в поддержку Meta напрямую.'}
+    ],
+    sku: [
+      {role:'user', text:'Почему SKU-матчер не нашёл позицию?'},
+      {role:'assistant', text:'ProFood поменял название «Кефир Айран 2.5%» на «Айран Кисломолочный 2.5%». Семантический поиск нашёл близкое совпадение (74%), но порог доверия 80% — потому передал оператору.\n\nРешение: добавить маппинг в справочник SKU: `PF-AYR-25` → «Айран Кисломолочный 2.5%». После этого будет 100% автоматически.'}
+    ],
+    timeout: [
+      {role:'user', text:'Что за timeout у OCR вчера?'},
+      {role:'assistant', text:'13.05 в 11:22 GPT-4o Vision API вернул 504 Gateway Timeout. Задача поставлена в очередь на повтор через 30с — второй запрос прошёл успешно.\n\nЭто единичный случай, не паттерн. OpenAI имеет ~0.1% rate timeouts. Если повторится 3+ раз за день — стоит добавить fallback на Claude Vision.'}
+    ]
+  };
+  const h = histories[type];
+  if (!h) return;
+  const msgs = document.getElementById('sa-messages');
+  // clear and reload
+  msgs.innerHTML = '';
+  h.forEach(m => addSaMsg(m.text, m.role === 'user' ? 'user' : 'assistant'));
+}
+
+function toast(msg,color='var(--tl)',border='var(--tb)'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.style.color=color;el.style.borderColor=border;
+  el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Receipt OS · Портал поставщика</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080a0d;--s1:#0d1117;--s2:#131920;--s3:#192030;--s4:#1e2838;
+  --b0:rgba(255,255,255,0.04);--b1:rgba(255,255,255,0.08);--b2:rgba(255,255,255,0.14);--b3:rgba(255,255,255,0.22);
+  --text:#dde4f0;--text2:#9aa8be;--muted:#566070;--dim:#2e3a4a;
+  --blue:#3b82f6;--bl:#93c5fd;--bd:rgba(59,130,246,0.12);--bb:rgba(59,130,246,0.30);
+  --teal:#10d9a0;--tl:#6ee7c7;--td:rgba(16,217,160,0.10);--tb:rgba(16,217,160,0.28);
+  --amber:#f59e0b;--al:#fbbf24;--ad:rgba(245,158,11,0.10);--ab:rgba(245,158,11,0.28);
+  --coral:#ef4444;--cl:#fca5a5;--cd:rgba(239,68,68,0.10);--cb:rgba(239,68,68,0.28);
+  --purple:#8b5cf6;--pl:#c4b5fd;--pd:rgba(139,92,246,0.12);--pb:rgba(139,92,246,0.30);
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;--r:8px;--r2:12px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--font);display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.010) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.010) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* ── TOPBAR ── */
+.topbar{height:52px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;position:relative;z-index:10}
+.tb-l{display:flex;align-items:center;gap:12px}
+.tb-brand{display:flex;align-items:center;gap:8px}
+.tb-logo{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.tb-logo em{color:var(--blue);font-style:normal}
+.tb-divider{width:1px;height:18px;background:var(--b2)}
+.tb-supplier{display:flex;align-items:center;gap:7px}
+.tb-sup-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:3px;background:var(--bd);border:1px solid var(--bb);color:var(--bl);text-transform:uppercase;letter-spacing:.1em}
+.tb-sup-name{font-size:13px;font-weight:600}
+.tb-r{display:flex;align-items:center;gap:8px}
+.tb-notif{
+  position:relative;width:32px;height:32px;border-radius:var(--r);
+  border:1px solid var(--b1);background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;font-size:14px;
+}
+.tb-notif:hover{background:var(--b1);border-color:var(--b2)}
+.tb-notif-dot{
+  position:absolute;top:5px;right:5px;width:7px;height:7px;
+  border-radius:50%;background:var(--coral);border:2px solid var(--s1);
+}
+.tb-user{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--muted);padding:4px 10px;border-radius:var(--r);border:1px solid var(--b1);cursor:pointer;transition:all .15s}
+.tb-user:hover{border-color:var(--b2);color:var(--text2)}
+.av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;background:var(--bd);border:1px solid var(--bb);color:var(--bl)}
+
+/* ── LAYOUT ── */
+.layout{display:flex;flex:1;overflow:hidden;position:relative;z-index:1}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;padding:16px 10px;gap:4px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:var(--r);
+  cursor:pointer;transition:all .15s;
+  border:1px solid transparent;
+  font-size:12px;font-weight:500;color:var(--muted);
+}
+.nav-item:hover{background:var(--b0);color:var(--text2)}
+.nav-item.active{background:var(--bd);border-color:var(--bb);color:var(--bl)}
+.nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:10px;background:var(--cd);border:1px solid var(--cb);color:var(--cl)}
+.nav-sep{height:1px;background:var(--b0);margin:6px 0}
+.sidebar-bottom{margin-top:auto;padding-top:12px;border-top:1px solid var(--b0)}
+.sb-stat{padding:8px 10px;background:var(--s2);border-radius:var(--r);margin-bottom:6px}
+.sb-stat-label{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.sb-stat-val{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.sb-stat-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:1px}
+
+/* ── MAIN ── */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.screen{display:none;flex:1;overflow-y:auto;flex-direction:column}
+.screen.active{display:flex}
+.screen::-webkit-scrollbar{width:4px}
+.screen::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.page{max-width:820px;width:100%;margin:0 auto;padding:24px 28px 60px}
+
+/* ── PAGE HEADER ── */
+.page-header{margin-bottom:22px}
+.page-eyebrow{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);margin-bottom:6px}
+.page-title{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--muted);font-weight:400}
+
+/* ── CARDS / PANELS ── */
+.panel{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;margin-bottom:14px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--b0)}
+.panel-title{font-size:12px;font-weight:700}
+.panel-body{padding:18px}
+.ptag{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:20px}
+
+/* ── BUTTONS ── */
+.btn{font-family:var(--mono);font-size:10px;padding:6px 14px;border-radius:var(--r);border:1px solid var(--b1);background:transparent;color:var(--text);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:hover{background:var(--b1);border-color:var(--b2)}
+.btn-blue{background:var(--bd);border-color:var(--bb);color:var(--bl)}
+.btn-blue:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-green{background:var(--td);border-color:var(--tb);color:var(--tl)}
+.btn-green:hover{background:var(--teal);color:#111;border-color:var(--teal)}
+.btn-warn{background:var(--ad);border-color:var(--ab);color:var(--al)}
+.btn-red{background:var(--cd);border-color:var(--cb);color:var(--cl)}
+.btn-full{width:100%;justify-content:center;padding:10px 14px;font-size:11px}
+.btn-lg{padding:10px 20px;font-size:11px}
+
+/* ════════════════════════════════
+   SCREEN 1 · UPLOAD
+   ════════════════════════════════ */
+
+/* STEP INDICATOR */
+.steps-row{display:flex;align-items:center;gap:0;margin-bottom:24px}
+.step-item{display:flex;align-items:center;gap:8px;flex:1}
+.step-item:last-child{flex:0}
+.step-circle{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:11px;font-weight:600;flex-shrink:0;
+  border:1.5px solid;transition:all .3s;
+}
+.step-circle.done{background:var(--td);border-color:var(--teal);color:var(--teal)}
+.step-circle.active{background:var(--bd);border-color:var(--blue);color:var(--blue)}
+.step-circle.wait{background:var(--b0);border-color:var(--b1);color:var(--dim)}
+.step-label{font-size:11px;font-weight:500;white-space:nowrap}
+.step-label.done{color:var(--tl)}
+.step-label.active{color:var(--bl)}
+.step-label.wait{color:var(--dim)}
+.step-connector{flex:1;height:1px;background:var(--b1);margin:0 8px}
+.step-connector.done{background:var(--teal);opacity:.4}
+
+/* UPLOAD ZONE */
+.upload-zone{
+  border:2px dashed var(--b2);border-radius:var(--r2);
+  padding:32px;text-align:center;
+  transition:all .2s;cursor:pointer;margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--bb);background:var(--bd)}
+.upload-zone.has-file{border-color:var(--tb);background:var(--td);border-style:solid}
+.uz-icon{font-size:36px;margin-bottom:10px;display:block}
+.uz-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.uz-sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:14px}
+.uz-btns{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.uz-file-info{
+  display:none;align-items:center;gap:10px;
+  background:rgba(0,0,0,.2);border-radius:var(--r);padding:10px 14px;
+  margin-top:12px;text-align:left;
+}
+.uz-file-info.show{display:flex}
+.uz-file-icon{font-size:20px;flex-shrink:0}
+.uz-file-name{font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uz-file-size{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.uz-file-remove{font-family:var(--mono);font-size:10px;color:var(--coral);cursor:pointer;padding:2px 6px;border-radius:4px;transition:background .15s}
+.uz-file-remove:hover{background:var(--cd)}
+
+/* ORDER SELECT */
+.po-select-wrap{margin-bottom:14px}
+.field-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px;display:block}
+.po-list{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto}
+.po-list::-webkit-scrollbar{width:3px}
+.po-list::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.po-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:var(--r);border:1px solid var(--b1);
+  background:var(--s3);cursor:pointer;transition:all .15s;
+}
+.po-item:hover{border-color:var(--b2);background:var(--s4)}
+.po-item.selected{border-color:var(--bb);background:var(--bd)}
+.po-item-radio{
+  width:14px;height:14px;border-radius:50%;border:1.5px solid var(--b2);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.po-item.selected .po-item-radio{border-color:var(--blue);background:var(--blue)}
+.po-item.selected .po-item-radio::after{content:'';width:5px;height:5px;border-radius:50%;background:#fff}
+.po-item-body{flex:1;min-width:0}
+.po-num{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--bl)}
+.po-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.po-amount{font-family:var(--mono);font-size:11px;color:var(--text2);flex-shrink:0}
+
+/* PROCESSING PANEL */
+.processing-panel{
+  background:var(--s2);border:1px solid var(--bb);border-radius:var(--r2);
+  padding:18px;display:none;
+}
+.processing-panel.show{display:block}
+.proc-title{font-size:12px;font-weight:700;color:var(--bl);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.proc-spin{
+  width:14px;height:14px;border-radius:50%;border:2px solid var(--bd);
+  border-top-color:var(--blue);animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-steps{display:flex;flex-direction:column;gap:6px}
+.ps-item{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted);padding:6px 8px;border-radius:6px;transition:all .3s}
+.ps-item.ps-active{background:var(--bd);color:var(--bl)}
+.ps-item.ps-done{background:var(--td);color:var(--tl)}
+.ps-item.ps-wait{color:var(--dim)}
+.ps-ico{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;border:1px solid}
+.ps-active .ps-ico{background:var(--bd);border-color:var(--blue);color:var(--blue)}
+.ps-done .ps-ico{background:var(--td);border-color:var(--teal);color:var(--teal)}
+.ps-wait .ps-ico{background:var(--b0);border-color:var(--b1);color:var(--dim)}
+
+/* RESULT PANEL */
+.result-panel{
+  background:var(--s2);border:1px solid var(--tb);border-radius:var(--r2);
+  padding:18px;display:none;animation:fadeUp .3s ease;
+}
+.result-panel.show{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.rp-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.rp-icon{font-size:24px}
+.rp-title{font-size:14px;font-weight:700;color:var(--tl)}
+.rp-sub{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.rp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.rp-stat{background:var(--s3);border-radius:var(--r);padding:10px 12px;text-align:center}
+.rp-stat-val{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:2px}
+.rp-stat-label{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.rp-lines{background:var(--s3);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.rpl-head{display:grid;grid-template-columns:2.5fr 60px 80px 70px;padding:6px 12px;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);border-bottom:1px solid var(--b0)}
+.rpl-row{display:grid;grid-template-columns:2.5fr 60px 80px 70px;padding:7px 12px;border-bottom:1px solid var(--b0);align-items:center;font-size:11px}
+.rpl-row:last-child{border-bottom:none}
+.rpl-row.warn{background:rgba(245,158,11,.04);border-left:2px solid var(--amber)}
+.rpl-name{font-weight:500}
+.rpl-sku{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.rpl-cell{font-family:var(--mono);font-size:10px}
+.rpl-match-ok{color:var(--tl)}
+.rpl-match-warn{color:var(--al)}
+.rpl-match-bad{color:var(--cl)}
+
+/* ════════════════════════════════
+   SCREEN 2 · DOCUMENTS
+   ════════════════════════════════ */
+.doc-filters{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap}
+.df{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:20px;border:1px solid transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.df:hover{border-color:var(--b1);color:var(--text2)}
+.df.on{background:var(--b1);border-color:var(--b2);color:var(--text)}
+.doc-list{display:flex;flex-direction:column;gap:6px}
+.doc-card{
+  background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);
+  padding:14px 16px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:all .15s;
+}
+.doc-card:hover{border-color:var(--b2);background:var(--s3)}
+.doc-card-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0}
+.doc-card-body{flex:1;min-width:0}
+.dc-title{font-size:12px;font-weight:600;margin-bottom:2px}
+.dc-meta{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.dc-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.dtag{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:3px}
+.dt-ok{background:var(--td);border:1px solid var(--tb);color:var(--tl)}
+.dt-warn{background:var(--ad);border:1px solid var(--ab);color:var(--al)}
+.dt-err{background:var(--cd);border:1px solid var(--cb);color:var(--cl)}
+.dt-proc{background:var(--bd);border:1px solid var(--bb);color:var(--bl)}
+.dt-new{background:var(--b0);border:1px solid var(--b1);color:var(--muted)}
+.doc-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.dc-amount{font-size:13px;font-weight:700}
+.dc-date{font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+/* ════════════════════════════════
+   SCREEN 3 · MESSAGES
+   ════════════════════════════════ */
+#screen-messages{display:none;flex-direction:row;flex:1;overflow:hidden}
+#screen-messages.active{display:flex}
+.msg-sidebar{
+  width:280px;flex-shrink:0;border-right:1px solid var(--b1);
+  background:var(--s1);display:flex;flex-direction:column;overflow:hidden;
+}
+.ms-head{padding:16px 14px 12px;border-bottom:1px solid var(--b0);flex-shrink:0}
+.ms-title{font-size:13px;font-weight:700;margin-bottom:8px}
+.ms-search{
+  width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);
+  padding:7px 10px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;
+}
+.ms-search::placeholder{color:var(--dim)}
+.ms-list{flex:1;overflow-y:auto;padding:8px 0}
+.ms-list::-webkit-scrollbar{width:3px}
+.ms-list::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.thread-item{
+  display:flex;align-items:flex-start;gap:9px;
+  padding:10px 14px;cursor:pointer;transition:background .12s;
+  border-left:3px solid transparent;
+}
+.thread-item:hover{background:var(--b0)}
+.thread-item.active{background:var(--s2);border-left-color:var(--blue)}
+.ti-avatar{
+  width:32px;height:32px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;
+}
+.ti-body{flex:1;min-width:0}
+.ti-name{font-size:12px;font-weight:600;margin-bottom:1px;display:flex;justify-content:space-between;align-items:center}
+.ti-time{font-family:var(--mono);font-size:10px;color:var(--dim);font-weight:400}
+.ti-preview{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.ti-tag{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:3px}
+.ti-unread{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--blue);color:#fff;
+  font-family:var(--mono);font-size:9px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:2px;
+}
+
+/* CHAT AREA */
+.chat-area{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.ca-head{
+  padding:12px 18px;border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.ca-avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ca-info{flex:1}
+.ca-name{font-size:13px;font-weight:700;margin-bottom:1px}
+.ca-sub{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.ca-actions{display:flex;gap:6px}
+
+/* MESSAGES */
+.ca-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.ca-messages::-webkit-scrollbar{width:4px}
+.ca-messages::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.msg-group{display:flex;flex-direction:column;gap:3px;animation:fadeUp .25s ease both}
+.msg-group.mine{align-items:flex-end}
+.msg-group.theirs{align-items:flex-start}
+.msg-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.bubble{
+  max-width:70%;padding:10px 13px;border-radius:12px;
+  font-size:13px;line-height:1.6;word-break:break-word;
+}
+.bubble-mine{background:linear-gradient(135deg,#1a40c0,#1e3aaa);border:1px solid rgba(59,130,246,.3);border-radius:12px 12px 3px 12px;color:#fff}
+.bubble-theirs{background:var(--s2);border:1px solid var(--b1);border-radius:3px 12px 12px 12px;color:var(--text)}
+.bubble-system{
+  background:var(--s3);border:1px solid var(--ab);border-radius:8px;
+  padding:10px 13px;max-width:80%;
+}
+.bs-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--al);margin-bottom:5px}
+.bs-text{font-size:12px;line-height:1.5}
+
+/* ATTACHED DOC bubble */
+.bubble-doc{
+  background:var(--s3);border:1px solid var(--b1);border-radius:var(--r);
+  padding:10px 12px;margin-top:6px;display:flex;align-items:center;gap:8px;
+  max-width:260px;cursor:pointer;transition:all .15s;
+}
+.bubble-doc:hover{border-color:var(--b2)}
+.bd-icon{font-size:18px;flex-shrink:0}
+.bd-body{flex:1;min-width:0}
+.bd-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bd-meta{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.bd-status{font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:3px;flex-shrink:0}
+
+/* SYS MSG */
+.sys-divider{display:flex;justify-content:center;align-items:center;gap:8px;padding:4px 0;font-family:var(--mono);font-size:10px;color:var(--dim)}
+.sys-line{flex:1;max-width:80px;height:1px;background:var(--b0)}
+
+/* INPUT */
+.ca-input{padding:12px 16px 14px;border-top:1px solid var(--b1);background:var(--s1);flex-shrink:0}
+.ci-row{display:flex;align-items:flex-end;gap:8px;background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:8px 12px;transition:border-color .2s,box-shadow .2s}
+.ci-row:focus-within{border-color:var(--bb);box-shadow:0 0 0 3px rgba(59,130,246,.08)}
+.ci-attach{font-size:15px;color:var(--muted);cursor:pointer;flex-shrink:0;transition:color .15s;padding:2px}
+.ci-attach:hover{color:var(--text2)}
+.ci-field{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:13px;resize:none;max-height:100px;min-height:20px;line-height:1.5}
+.ci-field::placeholder{color:var(--muted)}
+.ci-send{width:30px;height:30px;border-radius:7px;background:var(--blue);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;font-size:13px}
+.ci-send:hover{background:#2563eb;transform:scale(1.05)}
+.ci-send:active{transform:scale(.95)}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="tb-l">
+    <div class="tb-brand">
+      <div class="tb-logo">Veysə<em>loğlu</em></div>
+    </div>
+    <div class="tb-divider"></div>
+    <div class="tb-supplier">
+      <span class="tb-sup-badge">Поставщик</span>
+      <span class="tb-sup-name">Parvaз Group</span>
+    </div>
+  </div>
+  <div class="tb-r">
+    <div class="tb-notif" onclick="switchTo('messages')">
+      🔔<div class="tb-notif-dot" id="notif-dot"></div>
+    </div>
+    <div class="tb-user"><div class="av">ПГ</div>parv-zakup@group.az</div>
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="nav-item active" onclick="switchTo('upload')" id="nav-upload">
+    <span class="nav-icon">📤</span> Загрузить накладную
+  </div>
+  <div class="nav-item" onclick="switchTo('documents')" id="nav-documents">
+    <span class="nav-icon">📋</span> Мои документы
+  </div>
+  <div class="nav-item" onclick="switchTo('messages')" id="nav-messages">
+    <span class="nav-icon">💬</span> Сообщения
+    <span class="nav-badge" id="msg-badge">2</span>
+  </div>
+  <div class="nav-sep"></div>
+  <div class="nav-item" style="opacity:.5;cursor:default">
+    <span class="nav-icon">📊</span> Статистика
+  </div>
+  <div class="nav-item" style="opacity:.5;cursor:default">
+    <span class="nav-icon">📖</span> Справочник SKU
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="sb-stat">
+      <div class="sb-stat-label">Принято за май</div>
+      <div class="sb-stat-val" style="color:var(--tl)">89</div>
+      <div class="sb-stat-sub">из 112 накладных</div>
+    </div>
+    <div class="sb-stat">
+      <div class="sb-stat-label">Претензий</div>
+      <div class="sb-stat-val" style="color:var(--al)">3</div>
+      <div class="sb-stat-sub">ожидают ответа</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ═══ SCREEN 1: UPLOAD ═══ -->
+<div class="screen active" id="screen-upload">
+<div class="page">
+  <div class="page-header">
+    <div class="page-eyebrow">Новый документ</div>
+    <div class="page-title">Загрузить накладную</div>
+    <div class="page-sub">Агент распознает и сверит с заказом автоматически</div>
+  </div>
+
+  <!-- STEP INDICATOR -->
+  <div class="steps-row" id="upload-steps">
+    <div class="step-item">
+      <div class="step-circle active" id="step1-circle">1</div>
+      <span class="step-label active" id="step1-label">Файл</span>
+    </div>
+    <div class="step-connector" id="conn1"></div>
+    <div class="step-item">
+      <div class="step-circle wait" id="step2-circle">2</div>
+      <span class="step-label wait" id="step2-label">Выбор заказа</span>
+    </div>
+    <div class="step-connector" id="conn2"></div>
+    <div class="step-item">
+      <div class="step-circle wait" id="step3-circle">3</div>
+      <span class="step-label wait" id="step3-label">Обработка</span>
+    </div>
+    <div class="step-connector" id="conn3"></div>
+    <div class="step-item">
+      <div class="step-circle wait" id="step4-circle">4</div>
+      <span class="step-label wait" id="step4-label">Результат</span>
+    </div>
+  </div>
+
+  <!-- STEP 1: FILE -->
+  <div id="step-file">
+    <div class="upload-zone" id="drop-zone"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <span class="uz-icon" id="uz-icon">📎</span>
+      <div class="uz-title" id="uz-title">Перетащите накладную</div>
+      <div class="uz-sub">PDF · JPG · PNG · XLSX · е-Qaimə XML</div>
+      <div class="uz-btns">
+        <label class="btn btn-blue btn-lg">
+          📁 Выбрать файл
+          <input type="file" accept="image/*,application/pdf,.xlsx,.xml" style="display:none" onchange="handleFile(this)">
+        </label>
+        <button class="btn btn-lg" onclick="handleDemoFile()">🎯 Демо-файл</button>
+      </div>
+      <div class="uz-file-info" id="uz-file-info">
+        <div class="uz-file-icon" id="uz-file-icon">📄</div>
+        <div>
+          <div class="uz-file-name" id="uz-file-name">—</div>
+          <div class="uz-file-size" id="uz-file-size">—</div>
+        </div>
+        <div class="uz-file-remove" onclick="removeFile()">✕ Убрать</div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <button class="btn btn-blue btn-lg" id="btn-next-1" onclick="goStep2()" disabled>Далее — выбрать заказ →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: ORDER SELECT -->
+  <div id="step-po" style="display:none">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Выберите заказ</span>
+        <span class="ptag" style="background:var(--b0);border:1px solid var(--b1);color:var(--muted)">открытые заказы</span>
+      </div>
+      <div class="panel-body" style="padding:12px">
+        <div class="po-list">
+          <div class="po-item" onclick="selectPO(this,'PO-2026-0451','8 200 ₼','18.05.2026','Масло, сыр, яйца · 31 поз.')">
+            <div class="po-item-radio"></div>
+            <div class="po-item-body">
+              <div class="po-num">PO-2026-0451</div>
+              <div class="po-meta">Масло, сыр, яйца · 31 поз. · до 18.05</div>
+            </div>
+            <div class="po-amount">8 200 ₼</div>
+          </div>
+          <div class="po-item" onclick="selectPO(this,'PO-2026-0438','4 600 ₼','20.05.2026','Молочная продукция · 24 поз.')">
+            <div class="po-item-radio"></div>
+            <div class="po-item-body">
+              <div class="po-num">PO-2026-0438</div>
+              <div class="po-meta">Молочная продукция · 24 поз. · до 20.05</div>
+            </div>
+            <div class="po-amount">4 600 ₼</div>
+          </div>
+          <div class="po-item" onclick="selectPO(this,'PO-2026-0421','6 100 ₼','22.05.2026','Яйца, масло · 18 поз.')">
+            <div class="po-item-radio"></div>
+            <div class="po-item-body">
+              <div class="po-num">PO-2026-0421</div>
+              <div class="po-meta">Яйца, масло · 18 поз. · до 22.05</div>
+            </div>
+            <div class="po-amount">6 100 ₼</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <button class="btn" onclick="goStep1()">← Назад</button>
+      <button class="btn btn-blue btn-lg" id="btn-next-2" onclick="goStep3()" disabled>Отправить агенту →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: PROCESSING -->
+  <div id="step-processing" style="display:none">
+    <div class="processing-panel show" id="proc-panel">
+      <div class="proc-title">
+        <div class="proc-spin" id="proc-spin"></div>
+        Агент обрабатывает накладную…
+      </div>
+      <div class="proc-steps">
+        <div class="ps-item ps-active" id="ps1">
+          <div class="ps-ico">→</div>OCR-агент получил файл
+        </div>
+        <div class="ps-item ps-wait" id="ps2">
+          <div class="ps-ico">·</div>GPT-4o Vision распознаёт документ
+        </div>
+        <div class="ps-item ps-wait" id="ps3">
+          <div class="ps-ico">·</div>SKU-матчер ищет позиции в 1С
+        </div>
+        <div class="ps-item ps-wait" id="ps4">
+          <div class="ps-ico">·</div>Сверка с выбранным заказом
+        </div>
+        <div class="ps-item ps-wait" id="ps5">
+          <div class="ps-ico">·</div>Формирование результата
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: RESULT -->
+  <div id="step-result" style="display:none">
+    <div class="result-panel" id="result-panel">
+      <div class="rp-head">
+        <div class="rp-icon" id="rp-icon">✅</div>
+        <div>
+          <div class="rp-title" id="rp-title">Принято · всё совпало с заказом</div>
+          <div class="rp-sub" id="rp-sub">Агент завершил обработку · передано оператору Veysəloğlu</div>
+        </div>
+      </div>
+      <div class="rp-stats" id="rp-stats"></div>
+      <div class="rp-lines" id="rp-lines"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="resetUpload()">+ Загрузить ещё</button>
+        <button class="btn btn-blue" onclick="switchTo('documents')">Мои документы →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══ SCREEN 2: DOCUMENTS ═══ -->
+<div class="screen" id="screen-documents">
+<div class="page">
+  <div class="page-header">
+    <div class="page-eyebrow">История</div>
+    <div class="page-title">Мои документы</div>
+    <div class="page-sub">Все накладные · статус в реальном времени</div>
+  </div>
+
+  <div class="doc-filters">
+    <div class="df on" onclick="filterDocs('all',this)">Все</div>
+    <div class="df" onclick="filterDocs('ok',this)">✓ Принято</div>
+    <div class="df" onclick="filterDocs('warn',this)">⚠ Расхождение</div>
+    <div class="df" onclick="filterDocs('proc',this)">⏳ Обработка</div>
+    <div class="df" onclick="filterDocs('claim',this)">📨 Претензия</div>
+  </div>
+
+  <div class="doc-list" id="doc-list"></div>
+</div>
+</div>
+
+<!-- ═══ SCREEN 3: MESSAGES ═══ -->
+<div class="screen" id="screen-messages">
+
+  <!-- THREAD LIST -->
+  <div class="msg-sidebar">
+    <div class="ms-head">
+      <div class="ms-title">Сообщения</div>
+      <input class="ms-search" placeholder="Поиск…">
+    </div>
+    <div class="ms-list">
+
+      <div class="thread-item active" onclick="openThread('claim')">
+        <div class="ti-avatar" style="background:var(--cd);border:1px solid var(--cb)">📨</div>
+        <div class="ti-body">
+          <div class="ti-name">
+            Претензия #ПГ-1192
+            <span class="ti-time">14:28</span>
+          </div>
+          <div class="ti-preview">Обнаружено расхождение +11.1% к заказу…</div>
+          <div>
+            <span class="ti-tag dt-err">Ожидает ответа</span>
+          </div>
+        </div>
+        <div class="ti-unread">2</div>
+      </div>
+
+      <div class="thread-item" onclick="openThread('general')">
+        <div class="ti-avatar" style="background:var(--bd);border:1px solid var(--bb)">🏢</div>
+        <div class="ti-body">
+          <div class="ti-name">
+            Отдел закупок
+            <span class="ti-time">вчера</span>
+          </div>
+          <div class="ti-preview">Обновили справочник SKU — проверьте…</div>
+        </div>
+      </div>
+
+      <div class="thread-item" onclick="openThread('po451')">
+        <div class="ti-avatar" style="background:var(--td);border:1px solid var(--tb)">📋</div>
+        <div class="ti-body">
+          <div class="ti-name">
+            PO-2026-0451
+            <span class="ti-time">13.05</span>
+          </div>
+          <div class="ti-preview">Заказ подтверждён · ожидаем поставку</div>
+          <div>
+            <span class="ti-tag dt-ok">Активен</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area">
+    <div class="ca-head">
+      <div class="ca-avatar" id="ca-avatar" style="background:var(--cd);border:1px solid var(--cb)">📨</div>
+      <div class="ca-info">
+        <div class="ca-name" id="ca-name">Претензия по накладной #ПГ-1192</div>
+        <div class="ca-sub" id="ca-sub">Категорийный менеджер · Veysəloğlu</div>
+      </div>
+      <div class="ca-actions">
+        <button class="btn" onclick="toast('Документ открыт')">📄 Открыть накладную</button>
+      </div>
+    </div>
+
+    <div class="ca-messages" id="ca-messages"></div>
+
+    <div class="ca-input">
+      <div class="ci-row">
+        <label class="ci-attach" title="Прикрепить документ">
+          📎<input type="file" style="display:none" onchange="attachFile(this)">
+        </label>
+        <textarea class="ci-field" id="ci-field" placeholder="Написать сообщение…" rows="1"
+          onkeydown="handleMsgKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="ci-send" onclick="sendMsg()">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- TOAST -->
+<div style="position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(70px);background:#1a2030;border:1px solid var(--tb);border-radius:var(--r);padding:9px 16px;font-family:var(--mono);font-size:11px;color:var(--tl);z-index:100;transition:transform .3s cubic-bezier(.22,.68,0,1.2);white-space:nowrap;pointer-events:none" id="toast-el"></div>
+
+<script>
+// ── NAVIGATION ──
+function switchTo(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  document.getElementById('nav-'+screen).classList.add('active');
+  if(screen==='messages'){
+    document.getElementById('msg-badge').style.display='none';
+    document.getElementById('notif-dot').style.display='none';
+  }
+}
+
+// ── TOAST ──
+function toast(msg,color='var(--tl)',border='var(--tb)'){
+  const el=document.getElementById('toast-el');
+  el.textContent=msg;
+  el.style.borderColor=border;
+  el.style.color=color;
+  el.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.style.transform='translateX(-50%) translateY(70px)',2800);
+}
+
+// ══════════════════════════
+// SCREEN 1: UPLOAD
+// ══════════════════════════
+let uploadedFile=null;
+let selectedPO=null;
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag');
+  const f=e.dataTransfer.files[0];
+  if(f) setFile(f.name, formatSize(f.size));
+}
+function handleFile(inp){
+  if(inp.files[0]) setFile(inp.files[0].name, formatSize(inp.files[0].size));
+}
+function handleDemoFile(){
+  setFile('Накладная_Parvaз_15052026.pdf','487 КБ');
+}
+function formatSize(bytes){
+  if(bytes<1024) return bytes+' Б';
+  if(bytes<1024*1024) return Math.round(bytes/1024)+' КБ';
+  return (bytes/1024/1024).toFixed(1)+' МБ';
+}
+function setFile(name, size){
+  uploadedFile={name,size};
+  const zone=document.getElementById('drop-zone');
+  zone.classList.add('has-file');
+  const ext=name.split('.').pop().toLowerCase();
+  const iconMap={pdf:'📄',jpg:'🖼',jpeg:'🖼',png:'🖼',xlsx:'📊',xml:'🏛'};
+  document.getElementById('uz-file-icon').textContent=iconMap[ext]||'📄';
+  document.getElementById('uz-file-name').textContent=name;
+  document.getElementById('uz-file-size').textContent=size;
+  document.getElementById('uz-file-info').classList.add('show');
+  document.getElementById('uz-icon').textContent='✅';
+  document.getElementById('uz-title').textContent='Файл загружен';
+  document.getElementById('btn-next-1').disabled=false;
+}
+function removeFile(){
+  uploadedFile=null;
+  const zone=document.getElementById('drop-zone');
+  zone.classList.remove('has-file');
+  document.getElementById('uz-file-info').classList.remove('show');
+  document.getElementById('uz-icon').textContent='📎';
+  document.getElementById('uz-title').textContent='Перетащите накладную';
+  document.getElementById('btn-next-1').disabled=true;
+}
+function selectPO(el, num, amount, date, desc){
+  document.querySelectorAll('.po-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPO={num,amount,date,desc};
+  document.getElementById('btn-next-2').disabled=false;
+}
+
+// STEP NAVIGATION
+function goStep1(){
+  document.getElementById('step-file').style.display='block';
+  document.getElementById('step-po').style.display='none';
+  setStep(1);
+}
+function goStep2(){
+  if(!uploadedFile)return;
+  document.getElementById('step-file').style.display='none';
+  document.getElementById('step-po').style.display='block';
+  document.getElementById('step-result').style.display='none';
+  setStep(2);
+}
+async function goStep3(){
+  if(!selectedPO)return;
+  document.getElementById('step-po').style.display='none';
+  document.getElementById('step-processing').style.display='block';
+  setStep(3);
+  await runProcessing();
+}
+function setStep(n){
+  for(let i=1;i<=4;i++){
+    const circle=document.getElementById(`step${i}-circle`);
+    const label=document.getElementById(`step${i}-label`);
+    const conn=document.getElementById(`conn${i}`);
+    if(i<n){circle.className='step-circle done';circle.textContent='✓';label.className='step-label done';if(conn)conn.classList.add('done');}
+    else if(i===n){circle.className='step-circle active';circle.textContent=i;label.className='step-label active';}
+    else{circle.className='step-circle wait';circle.textContent=i;label.className='step-label wait';}
+  }
+}
+
+async function runProcessing(){
+  const steps=[
+    {id:'ps1',delay:600},
+    {id:'ps2',delay:1200},
+    {id:'ps3',delay:1100},
+    {id:'ps4',delay:900},
+    {id:'ps5',delay:700},
+  ];
+  let prev=null;
+  for(const s of steps){
+    if(prev){document.getElementById(prev).className='ps-item ps-done';document.getElementById(prev).querySelector('.ps-ico').textContent='✓';}
+    document.getElementById(s.id).className='ps-item ps-active';
+    await sleep(s.delay);
+    prev=s.id;
+  }
+  if(prev){document.getElementById(prev).className='ps-item ps-done';document.getElementById(prev).querySelector('.ps-ico').textContent='✓';}
+  document.getElementById('proc-spin').style.display='none';
+  showResult();
+}
+
+function showResult(){
+  document.getElementById('step-processing').style.display='none';
+  document.getElementById('step-result').style.display='block';
+  setStep(4);
+
+  // Simulate result — Parvaз has order discrepancy
+  const hasDiscrepancy=true;
+  const icon=document.getElementById('rp-icon');
+  const title=document.getElementById('rp-title');
+  const sub=document.getElementById('rp-sub');
+
+  if(hasDiscrepancy){
+    icon.textContent='⚠️';
+    title.textContent='Обнаружено расхождение с заказом';
+    title.style.color='var(--al)';
+    sub.textContent='Цены по 3 позициям выше согласованных · ожидает проверки оператора';
+  } else {
+    icon.textContent='✅';
+    title.textContent='Принято · всё совпало с заказом';
+    title.style.color='var(--tl)';
+  }
+
+  // stats
+  document.getElementById('rp-stats').innerHTML=`
+    <div class="rp-stat">
+      <div class="rp-stat-val" style="color:var(--bl)">31</div>
+      <div class="rp-stat-label">Позиций</div>
+    </div>
+    <div class="rp-stat">
+      <div class="rp-stat-val" style="color:var(--tl)">97%</div>
+      <div class="rp-stat-label">OCR</div>
+    </div>
+    <div class="rp-stat">
+      <div class="rp-stat-val" style="color:var(--tl)">100%</div>
+      <div class="rp-stat-label">SKU найден</div>
+    </div>
+    <div class="rp-stat">
+      <div class="rp-stat-val" style="color:var(--al)">3</div>
+      <div class="rp-stat-label">Расхождения</div>
+    </div>`;
+
+  // lines
+  const lines=[
+    {n:'Масло сл. 82% 200г',sku:'PV-MSL-82',qty:180,price:'2.20',poP:'1.98',match:100,diff:true},
+    {n:'Сыр Голланд. 45% 1кг',sku:'PV-SYR-HLD',qty:60,price:'12.00',poP:'10.80',match:100,diff:true},
+    {n:'Яйцо С1 10шт',sku:'PV-YAY-S1',qty:300,price:'2.90',poP:'2.61',match:100,diff:true},
+    {n:'Масло подсол. 1л рафин.',sku:'PV-MSP-001',qty:120,price:'2.40',poP:'2.40',match:100,diff:false},
+    {n:'Мука пшен. в/с 1кг',sku:'PV-MUK-001',qty:200,price:'1.05',poP:'1.05',match:100,diff:false},
+  ];
+  document.getElementById('rp-lines').innerHTML=`
+    <div class="rpl-head"><div>Позиция</div><div>Кол-во</div><div>Цена</div><div>Матч</div></div>
+    ${lines.map(l=>{
+      const pct=l.diff?((parseFloat(l.price)-parseFloat(l.poP))/parseFloat(l.poP)*100).toFixed(1):null;
+      return`<div class="rpl-row${l.diff?' warn':''}">
+        <div><div class="rpl-name">${l.n}</div><div class="rpl-sku">${l.sku}</div></div>
+        <div class="rpl-cell">${l.qty}</div>
+        <div class="rpl-cell">
+          ${l.price} ₼
+          ${pct?`<span style="color:var(--al);font-size:9px;margin-left:3px">+${pct}%</span>`:''}
+        </div>
+        <div class="rpl-cell rpl-match-ok">${l.match}%</div>
+      </div>`;
+    }).join('')}`;
+
+  document.getElementById('result-panel').classList.add('show');
+  toast(hasDiscrepancy?'⚠ Расхождения найдены — ожидайте ответа оператора':'✓ Накладная принята','var(--al)','var(--ab)');
+
+  // Add to docs list
+  addToDocList();
+}
+
+function resetUpload(){
+  uploadedFile=null;selectedPO=null;
+  removeFile();
+  document.getElementById('step-file').style.display='block';
+  document.getElementById('step-po').style.display='none';
+  document.getElementById('step-processing').style.display='none';
+  document.getElementById('step-result').style.display='none';
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('proc-spin').style.display='block';
+  document.getElementById('btn-next-2').disabled=true;
+  document.querySelectorAll('.po-item').forEach(i=>i.classList.remove('selected'));
+  ['ps1','ps2','ps3','ps4','ps5'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.className='ps-item ps-wait';
+    el.querySelector('.ps-ico').textContent='·';
+  });
+  setStep(1);
+}
+
+// ══════════════════════════
+// SCREEN 2: DOCUMENTS
+// ══════════════════════════
+const allDocs=[
+  {icon:'📄',title:'Накладная #ПГ-1192',meta:'31 поз. · PO-2026-0451',status:'warn',statusLabel:'Расхождение +11%',amount:'5 680 ₼',date:'15.05'},
+  {icon:'📄',title:'Накладная #ПГ-1108',meta:'28 поз. · PO-2026-0420',status:'claim',statusLabel:'Претензия получена',amount:'5 420 ₼',date:'08.05'},
+  {icon:'📄',title:'Накладная #ПГ-1044',meta:'30 поз. · PO-2026-0398',status:'claim',statusLabel:'Претензия получена',amount:'4 980 ₼',date:'01.05'},
+  {icon:'📄',title:'Накладная #ПГ-0981',meta:'24 поз. · PO-2026-0371',status:'ok',statusLabel:'Принято',amount:'4 200 ₼',date:'24.04'},
+  {icon:'📄',title:'Накладная #ПГ-0944',meta:'18 поз. · PO-2026-0355',status:'ok',statusLabel:'Принято',amount:'3 100 ₼',date:'18.04'},
+  {icon:'📄',title:'Накладная #ПГ-0912',meta:'26 поз. · PO-2026-0340',status:'ok',statusLabel:'Принято',amount:'4 700 ₼',date:'11.04'},
+  {icon:'📄',title:'Накладная #ПГ-0880',meta:'31 поз. · PO-2026-0320',status:'warn',statusLabel:'Расхождение +10.8%',amount:'4 650 ₼',date:'03.04'},
+];
+
+let docFilter='all';
+function filterDocs(f,el){
+  docFilter=f;
+  document.querySelectorAll('.df').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  renderDocs();
+}
+function addToDocList(){
+  allDocs.unshift({icon:'📄',title:'Накладная #ПГ-'+Math.floor(Math.random()*9000+1000),meta:'31 поз. · '+(selectedPO?selectedPO.num:'—'),status:'warn',statusLabel:'Расхождение +11%',amount:'5 680 ₼',date:'15.05 (сейчас)'});
+  renderDocs();
+}
+function renderDocs(){
+  const list=document.getElementById('doc-list');
+  if(!list)return;
+  const tagMap={ok:'dt-ok',warn:'dt-warn',claim:'dt-err',proc:'dt-proc',new:'dt-new'};
+  const labelMap={ok:'✓ Принято',warn:'⚠ Расхождение',claim:'📨 Претензия',proc:'⏳ Обработка',new:'Новый'};
+  let items=allDocs;
+  if(docFilter!=='all') items=allDocs.filter(d=>d.status===docFilter);
+  list.innerHTML=items.map(d=>`
+    <div class="doc-card" onclick="toast('Документ открыт')">
+      <div class="doc-card-icon">${d.icon}</div>
+      <div class="doc-card-body">
+        <div class="dc-title">${d.title}</div>
+        <div class="dc-meta">${d.meta}</div>
+        <div class="dc-tags">
+          <span class="dtag ${tagMap[d.status]||'dt-new'}">${d.statusLabel||labelMap[d.status]}</span>
+        </div>
+      </div>
+      <div class="doc-card-right">
+        <div class="dc-amount">${d.amount}</div>
+        <div class="dc-date">${d.date}</div>
+      </div>
+    </div>`).join('');
+}
+renderDocs();
+
+// ══════════════════════════
+// SCREEN 3: MESSAGES
+// ══════════════════════════
+const threads={
+  claim:{
+    avatar:'📨',avatarBg:'background:var(--cd);border:1px solid var(--cb)',
+    name:'Претензия по накладной #ПГ-1192',
+    sub:'Элин Мамедова · Категорийный менеджер · Veysəloğlu',
+    messages:[
+      {role:'sys',text:'15 мая 2026'},
+      {role:'theirs',name:'Элин Мамедова',time:'14:28',
+        text:'Добрый день. По накладной #ПГ-1192 от 15.05.2026 зафиксировано расхождение цен относительно PO-2026-0451.',
+        doc:{icon:'📨',name:'Претензия_ПГ-1192.pdf',meta:'Официальный документ · 48 КБ',status:'Требует ответа',statusStyle:'background:var(--cd);border:1px solid var(--cb);color:var(--cl)'}
+      },
+      {role:'theirs',name:'Элин Мамедова',time:'14:29',
+        text:'По нашим данным цены превышают согласованные в заказе на 11.1% по всем 31 позиции. Это уже третий случай за последние 30 дней. Просим предоставить корректировочный счёт или письменное обоснование в течение 3 рабочих дней.'},
+      {role:'sys',text:'Вы прочитали · 14:35'},
+    ]
+  },
+  general:{
+    avatar:'🏢',avatarBg:'background:var(--bd);border:1px solid var(--bb)',
+    name:'Отдел закупок Veysəloğlu',sub:'Закупки · общий канал',
+    messages:[
+      {role:'sys',text:'14 мая 2026'},
+      {role:'theirs',name:'Отдел закупок',time:'11:20',text:'Обновили справочник номенклатуры. Пожалуйста, проверьте наименования товаров — в следующем месяце SKU-матчинг будет работать строго по справочнику.'},
+      {role:'mine',time:'11:45',text:'Спасибо, ознакомимся и внесём изменения в нашу систему.'},
+    ]
+  },
+  po451:{
+    avatar:'📋',avatarBg:'background:var(--td);border:1px solid var(--tb)',
+    name:'PO-2026-0451 · Масло, сыр, яйца',sub:'Активный заказ · до 18.05.2026',
+    messages:[
+      {role:'sys',text:'10 мая 2026'},
+      {role:'theirs',name:'Отдел закупок',time:'09:15',text:'Заказ PO-2026-0451 подтверждён. Ожидаем поставку до 18.05.2026. Пожалуйста, загрузите накладную через портал при отгрузке.'},
+      {role:'mine',time:'09:40',text:'Подтверждаем. Отгрузка запланирована на 15.05.'},
+    ]
+  }
+};
+
+let currentThread='claim';
+
+function openThread(id){
+  currentThread=id;
+  document.querySelectorAll('.thread-item').forEach(t=>t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const t=threads[id];
+  document.getElementById('ca-avatar').style.cssText=t.avatarBg;
+  document.getElementById('ca-avatar').textContent=t.avatar;
+  document.getElementById('ca-name').textContent=t.name;
+  document.getElementById('ca-sub').textContent=t.sub;
+  renderMessages(t.messages);
+}
+
+function renderMessages(msgs){
+  const container=document.getElementById('ca-messages');
+  container.innerHTML=msgs.map(m=>{
+    if(m.role==='sys') return`<div class="sys-divider"><div class="sys-line"></div><span>${m.text}</span><div class="sys-line"></div></div>`;
+    const side=m.role==='mine'?'mine':'theirs';
+    const bubbleCls=m.role==='mine'?'bubble bubble-mine':'bubble bubble-theirs';
+    const metaHTML=m.role==='theirs'
+      ?`<div class="msg-meta"><span style="font-size:11px;font-weight:600;color:var(--text2)">${m.name||''}</span><span>${m.time}</span></div>`
+      :`<div class="msg-meta" style="justify-content:flex-end"><span>${m.time}</span></div>`;
+    const docHTML=m.doc?`<div class="bubble-doc" onclick="toast('Документ открыт')">
+      <div class="bd-icon">${m.doc.icon}</div>
+      <div class="bd-body"><div class="bd-name">${m.doc.name}</div><div class="bd-meta">${m.doc.meta}</div></div>
+      <span class="bd-status" style="${m.doc.statusStyle}">${m.doc.status}</span>
+    </div>`:'';
+    return`<div class="msg-group ${side} animate">
+      ${metaHTML}
+      <div class="${bubbleCls}">${m.text}${docHTML}</div>
+    </div>`;
+  }).join('');
+  setTimeout(()=>container.scrollTop=container.scrollHeight,50);
+}
+
+let msgSending=false;
+function sendMsg(){
+  const field=document.getElementById('ci-field');
+  const text=field.value.trim();
+  if(!text||msgSending)return;
+  msgSending=true;
+  field.value='';field.style.height='';
+  const t=threads[currentThread];
+  const time=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  t.messages.push({role:'mine',time,text});
+  renderMessages(t.messages);
+
+  // Auto-reply after delay
+  setTimeout(()=>{
+    const replies={
+      claim:'Принято. Ожидаем корректировочный счёт или письменное обоснование в течение 3 рабочих дней.',
+      general:'Спасибо за обратную связь.',
+      po451:'Хорошо, ждём накладную через портал при отгрузке.',
+    };
+    t.messages.push({role:'theirs',name:'Veysəloğlu',time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),text:replies[currentThread]||'Сообщение получено, рассмотрим.'});
+    renderMessages(t.messages);
+    msgSending=false;
+  },1200+Math.random()*800);
+}
+
+function attachFile(inp){
+  if(!inp.files[0])return;
+  const t=threads[currentThread];
+  const time=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  t.messages.push({
+    role:'mine',time,text:'Прикрепляю документ:',
+    doc:{icon:'📄',name:inp.files[0].name,meta:formatSize(inp.files[0].size)+' · только что',status:'Отправлено',statusStyle:'background:var(--td);border:1px solid var(--tb);color:var(--tl)'}
+  });
+  renderMessages(t.messages);
+  toast('📎 Файл отправлен');
+}
+
+function handleMsgKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// INIT
+openThread('claim');
+</script>
+
+<!-- GLOBAL NAV -->
+<style>
+.gnav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(10,14,20,0.96);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.11);border-radius:50px;padding:6px 8px;display:flex;gap:2px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.55);font-family:"JetBrains Mono",monospace}
+.gni{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:40px;font-size:11px;color:rgba(255,255,255,0.42);cursor:pointer;transition:all .18s;text-decoration:none;border:1px solid transparent;white-space:nowrap}
+.gni:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.06)}
+.gni.on{background:rgba(59,130,246,0.14);border-color:rgba(59,130,246,0.32);color:#93c5fd}
+.gni-icon{font-size:13px}
+.gn-sep{width:1px;background:rgba(255,255,255,0.08);margin:4px 3px}
+.gni-out{display:flex;align-items:center;gap:5px;padding:7px 11px;border-radius:40px;font-size:10px;color:rgba(255,255,255,0.28);cursor:pointer;transition:all .18s;border:1px solid transparent}
+.gni-out:hover{color:rgba(239,68,68,0.75);border-color:rgba(239,68,68,0.18);background:rgba(239,68,68,0.06)}
+@media(max-width:600px){.gnav{bottom:10px;padding:4px 6px}.gni{padding:6px 9px;font-size:10px}.gni-lbl{display:none}}
+</style>
+<div class="gnav">
+  <a class="gni" href="veyseloglu_operator.html" title="Рабочее место оператора"><span class="gni-icon">📄</span><span class="gni-lbl">Оператор</span></a>
+  <a class="gni" href="veyseloglu_manager.html" title="Менеджер по закупкам"><span class="gni-icon">📊</span><span class="gni-lbl">Менеджер</span></a>
+  <a class="gni" href="veyseloglu_chat.html" title="Чат с агентами"><span class="gni-icon">🤖</span><span class="gni-lbl">Агенты</span></a>
+  <a class="gni" href="veyseloglu_supplier.html" title="Портал поставщика"><span class="gni-icon">📤</span><span class="gni-lbl">Поставщик</span></a>
+  <a class="gni" href="veyseloglu_receipt_os.html" title="Архитектурная схема"><span class="gni-icon">🗺</span><span class="gni-lbl">Схема</span></a>
+  <div class="gn-sep"></div>
+  <div class="gni-out" onclick="location.href='index.html'">← Выход</div>
+</div>
+<script>
+(function(){
+  var p=location.pathname.split("/").pop()||"index.html";
+  document.querySelectorAll(".gnav .gni").forEach(function(a){
+    if(a.getAttribute("href")===p) a.classList.add("on");
+  });
+})();
+<\/script>
+</body>
+</html>

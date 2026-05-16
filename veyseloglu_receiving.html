@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Receipt OS · Приёмка</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#07090c;--s1:#0d1117;--s2:#131920;--s3:#192030;
+  --b0:rgba(255,255,255,0.04);--b1:rgba(255,255,255,0.08);--b2:rgba(255,255,255,0.14);
+  --text:#dde4f0;--text2:#9aa8be;--muted:#566070;--dim:#2e3a4a;
+  --teal:#10d9a0;--tl:#6ee7c7;--td:rgba(16,217,160,0.10);--tb:rgba(16,217,160,0.28);
+  --amber:#f59e0b;--al:#fbbf24;--ad:rgba(245,158,11,0.11);--ab:rgba(245,158,11,0.30);
+  --coral:#ef4444;--cl:#fca5a5;--cd:rgba(239,68,68,0.11);--cb:rgba(239,68,68,0.30);
+  --blue:#3b82f6;--bl:#93c5fd;--bd:rgba(59,130,246,0.11);--bb:rgba(59,130,246,0.28);
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{height:100%;background:var(--bg)}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--font);
+  min-height:100vh;display:flex;flex-direction:column;
+  max-width:430px;margin:0 auto;position:relative;
+}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.010) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.010) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* ── STATUS BAR MOCK ── */
+.status-bar{height:10px;background:var(--s1);flex-shrink:0}
+
+/* ── TOP HEADER ── */
+.top-header{
+  background:var(--s1);border-bottom:1px solid var(--b1);
+  padding:12px 16px;flex-shrink:0;position:sticky;top:0;z-index:20;
+}
+.th-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.th-back{
+  display:flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:11px;color:var(--muted);
+  cursor:pointer;padding:4px 0;transition:color .15s;
+}
+.th-back:hover{color:var(--text)}
+.th-title{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.th-status{font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:4px}
+.status-active{background:var(--bd);border:1px solid var(--bb);color:var(--bl)}
+.status-active::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--blue);animation:blink 2s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.th-row2{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.th-tag{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px}
+.tt-supplier{background:var(--b0);border:1px solid var(--b1);color:var(--muted)}
+.tt-po{background:var(--bd);border:1px solid var(--bb);color:var(--bl)}
+.tt-items{background:var(--b0);border:1px solid var(--b1);color:var(--muted)}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap{padding:10px 16px 0;flex-shrink:0;position:sticky;top:88px;z-index:19;background:var(--s1);border-bottom:1px solid var(--b0)}
+.prog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.prog-bar-track{height:3px;background:var(--b1);border-radius:2px;margin-bottom:10px;overflow:hidden}
+.prog-bar-fill{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .4s ease}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:12px 14px 100px;position:relative;z-index:1}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* ── SECTION HEADER ── */
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0 6px;margin-bottom:4px;
+  border-bottom:1px solid var(--b0);
+}
+.sh-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim)}
+.sh-count{font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+/* ── ITEM CARD ── */
+.item-card{
+  background:var(--s2);border:1px solid var(--b1);border-radius:10px;
+  margin-bottom:8px;overflow:hidden;transition:border-color .15s;
+  position:relative;
+}
+.item-card.item-ok{border-color:var(--tb)}
+.item-card.item-warn{border-color:var(--ab)}
+.item-card.item-short{border-color:var(--cb)}
+.item-card.item-active{border-color:var(--bb);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+
+/* STATUS STRIPE */
+.item-stripe{
+  position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:10px 0 0 10px;
+  transition:background .3s;
+}
+.item-ok .item-stripe{background:var(--teal)}
+.item-warn .item-stripe{background:var(--amber)}
+.item-short .item-stripe{background:var(--coral)}
+.item-pending .item-stripe{background:var(--b2)}
+.item-active .item-stripe{background:var(--blue)}
+
+.item-body{padding:11px 12px 11px 16px}
+
+/* TOP ROW */
+.item-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+.item-name{flex:1;font-size:13px;font-weight:600;line-height:1.3}
+.item-sku{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:2px}
+.item-status-badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;flex-shrink:0;margin-top:1px}
+.ib-ok{background:var(--td);border:1px solid var(--tb);color:var(--tl)}
+.ib-warn{background:var(--ad);border:1px solid var(--ab);color:var(--al)}
+.ib-short{background:var(--cd);border:1px solid var(--cb);color:var(--cl)}
+.ib-pending{background:var(--b0);border:1px solid var(--b1);color:var(--muted)}
+.ib-active{background:var(--bd);border:1px solid var(--bb);color:var(--bl)}
+
+/* QTY ROW */
+.qty-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+.qty-cell{background:var(--s3);border-radius:7px;padding:7px 8px;text-align:center}
+.qty-label{font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:3px}
+.qty-val{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.qty-plan{color:var(--text2)}
+.qty-fact{color:var(--tl)}
+.qty-fact.warn{color:var(--al)}
+.qty-fact.short{color:var(--cl)}
+.qty-diff{font-size:14px;font-weight:700}
+.diff-zero{color:var(--muted)}
+.diff-neg{color:var(--cl)}
+.diff-pos{color:var(--tl)}
+
+/* INPUT AREA */
+.item-input-area{display:none}
+.item-input-area.open{display:block}
+.input-wrap{background:var(--s3);border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.input-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;display:block}
+.qty-stepper{display:flex;align-items:center;gap:0;background:var(--s2);border:1px solid var(--b2);border-radius:8px;overflow:hidden}
+.step-btn{
+  width:48px;height:48px;border:none;background:transparent;
+  font-size:22px;color:var(--text);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;flex-shrink:0;
+}
+.step-btn:hover{background:var(--b1)}
+.step-btn:active{background:var(--b2)}
+.step-input{
+  flex:1;text-align:center;background:transparent;border:none;
+  color:var(--text);font-family:var(--font);font-size:24px;font-weight:700;
+  outline:none;padding:8px 4px;min-width:0;
+}
+.step-divider{width:1px;height:32px;background:var(--b1);flex-shrink:0}
+.fact-shortcuts{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.sc-btn{
+  font-family:var(--mono);font-size:10px;padding:5px 10px;
+  border-radius:6px;border:1px solid var(--b1);
+  background:transparent;color:var(--muted);cursor:pointer;
+  transition:all .15s;
+}
+.sc-btn:hover{background:var(--b1);color:var(--text)}
+.sc-btn.sc-exact{background:var(--td);border-color:var(--tb);color:var(--tl)}
+.defect-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--b0);margin-top:8px}
+.defect-label{font-size:12px;color:var(--text2)}
+.defect-stepper{display:flex;align-items:center;gap:8px}
+.def-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--text);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.def-btn:hover{background:var(--b1)}
+.def-val{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--al);min-width:20px;text-align:center}
+.note-field{
+  width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:6px;
+  padding:8px 10px;color:var(--text);font-family:var(--font);font-size:12px;
+  outline:none;resize:none;height:52px;margin-top:6px;transition:border-color .15s;
+}
+.note-field:focus{border-color:var(--bb)}
+.note-field::placeholder{color:var(--dim)}
+.item-actions{display:flex;gap:6px}
+.ia-btn{
+  font-family:var(--mono);font-size:10px;padding:7px 14px;
+  border-radius:7px;border:1px solid var(--b1);
+  background:transparent;color:var(--text2);cursor:pointer;
+  transition:all .15s;flex:1;text-align:center;
+}
+.ia-btn:hover{background:var(--b1);border-color:var(--b2)}
+.ia-confirm{background:var(--td);border-color:var(--tb);color:var(--tl);font-weight:600}
+.ia-confirm:hover{background:var(--teal);color:#111;border-color:var(--teal)}
+.ia-skip{color:var(--muted)}
+
+/* ── DISCREPANCY SUMMARY BAR ── */
+.disc-bar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;
+  background:var(--s1);border-top:1px solid var(--b1);
+  padding:10px 14px 16px;z-index:30;
+}
+.disc-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.disc-cell{text-align:center;background:var(--s2);border-radius:7px;padding:7px 8px}
+.disc-label{font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:2px}
+.disc-val{font-size:15px;font-weight:800}
+.disc-actions{display:flex;gap:6px}
+.da-btn{
+  font-family:var(--mono);font-size:11px;padding:10px;
+  border-radius:8px;border:1px solid var(--b1);
+  background:transparent;color:var(--text2);cursor:pointer;
+  transition:all .15s;flex:1;text-align:center;font-weight:500;
+}
+.da-btn:hover{background:var(--b1);border-color:var(--b2)}
+.da-complete{background:var(--td);border-color:var(--tb);color:var(--tl)}
+.da-complete:hover{background:var(--teal);color:#111}
+.da-complete:disabled{opacity:.4;cursor:not-allowed;background:transparent;color:var(--muted)}
+
+/* ── COMPLETION OVERLAY ── */
+.completion{
+  position:fixed;inset:0;max-width:430px;margin:0 auto;
+  background:var(--bg);z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px;text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.completion.show{opacity:1;pointer-events:all}
+.comp-icon{font-size:56px;margin-bottom:16px;animation:popIn .4s cubic-bezier(.22,.68,0,1.5) both}
+@keyframes popIn{from{transform:scale(0.4);opacity:0}to{transform:scale(1);opacity:1}}
+.comp-title{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.comp-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+.comp-stats{
+  width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:12px;
+  padding:16px;margin-bottom:20px;
+}
+.cs-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;border-bottom:1px solid var(--b0)}
+.cs-row:last-child{border-bottom:none}
+.cs-label{color:var(--muted)}
+.cs-val{font-weight:600;font-family:var(--mono)}
+.comp-actions{display:flex;flex-direction:column;gap:8px;width:100%}
+.comp-btn{
+  padding:12px 20px;border-radius:10px;border:1px solid var(--b1);
+  background:transparent;color:var(--text);font-family:var(--font);
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.comp-btn:hover{background:var(--b1);border-color:var(--b2)}
+.comp-btn-primary{background:var(--td);border-color:var(--tb);color:var(--tl)}
+.comp-btn-primary:hover{background:var(--teal);color:#111}
+.comp-btn-warn{background:var(--ad);border-color:var(--ab);color:var(--al)}
+.comp-btn-warn:hover{background:var(--amber);color:#111}
+
+/* ── ACT PREVIEW ── */
+.act-overlay{
+  position:fixed;inset:0;max-width:430px;margin:0 auto;
+  background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);
+  z-index:60;display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.act-overlay.show{opacity:1;pointer-events:all}
+.act-sheet{
+  background:var(--s2);border:1px solid var(--b2);border-radius:16px 16px 0 0;
+  padding:20px 18px 30px;width:100%;
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.22,.68,0,1.2);
+}
+.act-overlay.show .act-sheet{transform:translateY(0)}
+.act-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.act-title{font-size:14px;font-weight:700}
+.act-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s}
+.act-close:hover{background:var(--b1);color:var(--text)}
+.act-doc{background:var(--s3);border-radius:10px;padding:14px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.8;margin-bottom:14px;white-space:pre-wrap}
+.act-btns{display:flex;gap:8px}
+.act-btn{flex:1;padding:10px;border-radius:8px;border:1px solid var(--b1);background:transparent;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;color:var(--text)}
+.act-btn:hover{background:var(--b1)}
+.act-btn-sign{background:var(--bd);border-color:var(--bb);color:var(--bl)}
+.act-btn-sign:hover{background:var(--blue);color:#fff}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(40px);background:var(--s3);border:1px solid var(--tb);border-radius:8px;padding:8px 14px;font-family:var(--mono);font-size:11px;color:var(--tl);z-index:40;transition:transform .25s cubic-bezier(.22,.68,0,1.2),opacity .25s;opacity:0;white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<div class="status-bar"></div>
+
+<!-- TOP HEADER -->
+<header class="top-header">
+  <div class="th-row1">
+    <div class="th-back" onclick="history.back()">← Рабочее место</div>
+    <div class="th-title">Приёмка</div>
+    <div class="th-status status-active" id="header-status">В процессе</div>
+  </div>
+  <div class="th-row2">
+    <span class="th-tag tt-supplier">Parvaз Group</span>
+    <span class="th-tag tt-po">PO-2026-0451</span>
+    <span class="th-tag tt-items" id="items-tag">5 позиций</span>
+  </div>
+</header>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="prog-row">
+    <span id="prog-label">Принято 0 из 5</span>
+    <span id="prog-pct">0%</span>
+  </div>
+  <div class="prog-bar-track">
+    <div class="prog-bar-fill" id="prog-fill" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="content"></div>
+
+<!-- BOTTOM BAR -->
+<div class="disc-bar">
+  <div class="disc-row">
+    <div class="disc-cell">
+      <div class="disc-label">Принято</div>
+      <div class="disc-val" id="db-accepted" style="color:var(--tl)">0</div>
+    </div>
+    <div class="disc-cell">
+      <div class="disc-label">Недостача</div>
+      <div class="disc-val" id="db-shortage" style="color:var(--cl)">0</div>
+    </div>
+    <div class="disc-cell">
+      <div class="disc-label">Брак</div>
+      <div class="disc-val" id="db-defect" style="color:var(--al)">0</div>
+    </div>
+  </div>
+  <div class="disc-actions">
+    <button class="da-btn" onclick="showAct()">📄 Акт расхождений</button>
+    <button class="da-btn da-complete" id="btn-complete" onclick="completeReceiving()" disabled>
+      Завершить приёмку →
+    </button>
+  </div>
+</div>
+
+<!-- COMPLETION -->
+<div class="completion" id="completion"></div>
+
+<!-- ACT SHEET -->
+<div class="act-overlay" id="act-overlay" onclick="if(event.target===this)closeAct()">
+  <div class="act-sheet">
+    <div class="act-head">
+      <span class="act-title">📄 Акт расхождений</span>
+      <button class="act-close" onclick="closeAct()">×</button>
+    </div>
+    <div class="act-doc" id="act-doc">Нет расхождений</div>
+    <div class="act-btns">
+      <button class="act-btn" onclick="closeAct()">Закрыть</button>
+      <button class="act-btn act-btn-sign" onclick="signAct()">✓ Подписать и отправить</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──
+const invoice={
+  supplier:'Parvaз Group',
+  invoiceNum:'#ПГ-1192',
+  po:'PO-2026-0451',
+  date:'15.05.2026',
+  store:'OBA 28 May',
+  driver:'Рашид А.',
+};
+
+const items=[
+  {id:0, name:'Масло сл. 82% 200г', sku:'PV-MSL-82', planned:180, unit:'шт', price:2.20},
+  {id:1, name:'Сыр Голланд. 45% 1кг', sku:'PV-SYR-HLD', planned:60, unit:'шт', price:12.00},
+  {id:2, name:'Яйцо С1 10шт', sku:'PV-YAY-S1', planned:300, unit:'шт', price:2.90},
+  {id:3, name:'Масло подсол. 1л рафин.', sku:'PV-MSP-001', planned:120, unit:'шт', price:2.40},
+  {id:4, name:'Мука пшен. в/с 1кг', sku:'PV-MUK-001', planned:200, unit:'шт', price:1.05},
+];
+
+// State
+const state=items.map(it=>({
+  ...it,
+  actual:null,   // null = not counted yet
+  defect:0,
+  note:'',
+  confirmed:false,
+}));
+
+let activeItem=null;
+
+// ── RENDER ──
+function render(){
+  const content=document.getElementById('content');
+  content.innerHTML=state.map((it,i)=>buildCard(it,i)).join('');
+  updateProgress();
+  updateBottomBar();
+}
+
+function buildCard(it,i){
+  const status=getStatus(it);
+  const diff=it.actual!==null ? it.actual - it.planned : null;
+  const isActive=activeItem===i;
+
+  const statusBadge={
+    ok:'<span class="item-status-badge ib-ok">✓ Принято</span>',
+    warn:'<span class="item-status-badge ib-warn">⚠ Избыток</span>',
+    short:'<span class="item-status-badge ib-short">↓ Недостача</span>',
+    pending:'<span class="item-status-badge ib-pending">Ожидает</span>',
+    active:'<span class="item-status-badge ib-active">Считаем…</span>',
+  }[isActive?'active':status];
+
+  const diffDisplay=diff===null?'—':diff===0?'0':diff>0?`+${diff}`:`${diff}`;
+  const diffClass=diff===null?'diff-zero':diff===0?'diff-zero':diff>0?'diff-pos':'diff-neg';
+  const factClass=diff===null?'qty-fact':diff===0?'qty-fact':diff>0?'qty-fact diff-pos':'qty-fact short';
+
+  const shortcuts=[
+    {label:`= ${it.planned}`,val:it.planned,exact:true},
+    {label:Math.max(0,it.planned-1),val:Math.max(0,it.planned-1)},
+    {label:Math.max(0,it.planned-5),val:Math.max(0,it.planned-5)},
+    {label:Math.max(0,it.planned-10),val:Math.max(0,it.planned-10)},
+  ].filter((s,i,arr)=>i===0||s.val!==arr[0].val);
+
+  const inputArea=`
+    <div class="item-input-area ${isActive?'open':''}">
+      <div class="input-wrap">
+        <span class="input-label">Фактическое количество · ${it.unit}</span>
+        <div class="qty-stepper">
+          <button class="step-btn" onclick="stepQty(${i},-1)">−</button>
+          <div class="step-divider"></div>
+          <input class="step-input" id="qty-input-${i}"
+            type="number" min="0" inputmode="numeric"
+            value="${it.actual!==null?it.actual:it.planned}"
+            onchange="setQty(${i},this.value)"
+            oninput="setQty(${i},this.value)">
+          <div class="step-divider"></div>
+          <button class="step-btn" onclick="stepQty(${i},+1)">+</button>
+        </div>
+        <div class="fact-shortcuts">
+          ${shortcuts.map(s=>`
+            <button class="sc-btn ${s.exact?'sc-exact':''}" onclick="setQty(${i},${s.val})">${s.label}</button>
+          `).join('')}
+        </div>
+        <div class="defect-row">
+          <span class="defect-label">Брак / повреждено</span>
+          <div class="defect-stepper">
+            <button class="def-btn" onclick="stepDefect(${i},-1)">−</button>
+            <span class="def-val" id="defect-val-${i}">${it.defect}</span>
+            <button class="def-btn" onclick="stepDefect(${i},+1)">+</button>
+          </div>
+        </div>
+        <textarea class="note-field" placeholder="Примечание (необязательно)…"
+          onchange="setNote(${i},this.value)">${it.note}</textarea>
+      </div>
+      <div class="item-actions">
+        <button class="ia-btn ia-skip" onclick="skipItem(${i})">Пропустить</button>
+        <button class="ia-btn ia-confirm" onclick="confirmItem(${i})">
+          ${it.actual!==null&&it.actual!==it.planned?'Подтвердить расхождение ':'Принято '}→
+        </button>
+      </div>
+    </div>`;
+
+  return`
+    <div class="item-card item-${isActive?'active':status}" id="card-${i}" onclick="activateItem(${i},event)">
+      <div class="item-stripe"></div>
+      <div class="item-body">
+        <div class="item-top">
+          <div>
+            <div class="item-name">${it.name}</div>
+            <div class="item-sku">${it.sku}</div>
+          </div>
+          ${statusBadge}
+        </div>
+        <div class="qty-row">
+          <div class="qty-cell">
+            <div class="qty-label">По накладной</div>
+            <div class="qty-val qty-plan">${it.planned}</div>
+          </div>
+          <div class="qty-cell">
+            <div class="qty-label">Фактически</div>
+            <div class="qty-val ${factClass}">${it.actual!==null?it.actual:'—'}</div>
+          </div>
+          <div class="qty-cell">
+            <div class="qty-label">Разница</div>
+            <div class="qty-val ${diffClass}">${diffDisplay}</div>
+          </div>
+        </div>
+        ${inputArea}
+      </div>
+    </div>`;
+}
+
+function getStatus(it){
+  if(!it.confirmed) return 'pending';
+  if(it.actual===it.planned) return 'ok';
+  if(it.actual>it.planned) return 'warn';
+  return 'short';
+}
+
+// ── INTERACTIONS ──
+function activateItem(i, e){
+  if(e && e.target.closest('.item-input-area')) return;
+  if(state[i].confirmed) return;
+  activeItem = activeItem===i ? null : i;
+  render();
+  if(activeItem===i){
+    setTimeout(()=>{
+      const card=document.getElementById(`card-${i}`);
+      if(card) card.scrollIntoView({behavior:'smooth',block:'nearest'});
+      const inp=document.getElementById(`qty-input-${i}`);
+      if(inp){inp.focus();inp.select();}
+    },100);
+  }
+}
+
+function setQty(i, val){
+  const v=Math.max(0,parseInt(val)||0);
+  state[i].actual=v;
+  // update just the qty display without full re-render
+  updateCardDisplay(i);
+}
+
+function stepQty(i, delta){
+  const current = state[i].actual !== null ? state[i].actual : state[i].planned;
+  state[i].actual = Math.max(0, current + delta);
+  const inp=document.getElementById(`qty-input-${i}`);
+  if(inp) inp.value=state[i].actual;
+  updateCardDisplay(i);
+}
+
+function stepDefect(i, delta){
+  state[i].defect = Math.max(0, state[i].defect + delta);
+  const el=document.getElementById(`defect-val-${i}`);
+  if(el) el.textContent=state[i].defect;
+  updateBottomBar();
+}
+
+function setNote(i, val){state[i].note=val;}
+
+function updateCardDisplay(i){
+  const it=state[i];
+  const diff=it.actual!==null?it.actual-it.planned:null;
+  // Update qty cells
+  const card=document.getElementById(`card-${i}`);
+  if(!card) return;
+  const cells=card.querySelectorAll('.qty-val');
+  if(cells[1]){
+    const fc=diff===null?'qty-fact':diff===0?'qty-fact':diff>0?'qty-fact diff-pos':'qty-fact short';
+    cells[1].className=`qty-val ${fc}`;
+    cells[1].textContent=it.actual!==null?it.actual:'—';
+  }
+  if(cells[2]){
+    const dc=diff===null?'diff-zero':diff===0?'diff-zero':diff>0?'diff-pos':'diff-neg';
+    cells[2].className=`qty-val ${dc}`;
+    const dd=diff===null?'—':diff===0?'0':diff>0?`+${diff}`:`${diff}`;
+    cells[2].textContent=dd;
+  }
+  // Update confirm button label
+  const confirmBtn=card.querySelector('.ia-confirm');
+  if(confirmBtn && it.actual!==null){
+    confirmBtn.textContent=it.actual!==it.planned?'Подтвердить расхождение →':'Принято →';
+  }
+  updateBottomBar();
+}
+
+function confirmItem(i){
+  if(state[i].actual===null) state[i].actual=state[i].planned;
+  state[i].confirmed=true;
+  activeItem=null;
+
+  const diff=state[i].actual-state[i].planned;
+  if(diff<0) toast(`↓ Недостача ${Math.abs(diff)} ${state[i].unit}`,'var(--cl)','var(--cb)');
+  else if(diff>0) toast(`↑ Избыток ${diff} ${state[i].unit}`,'var(--al)','var(--ab)');
+  else toast(`✓ ${state[i].name.split(' ').slice(0,3).join(' ')} — принято`,'var(--tl)','var(--tb)');
+
+  // Auto-advance to next unconfirmed
+  const next=state.findIndex((s,idx)=>idx>i&&!s.confirmed);
+  if(next!==-1) setTimeout(()=>{activeItem=next;render();
+    setTimeout(()=>{
+      const card=document.getElementById(`card-${next}`);
+      if(card) card.scrollIntoView({behavior:'smooth',block:'start'});
+      const inp=document.getElementById(`qty-input-${next}`);
+      if(inp){inp.focus();inp.select();}
+    },120);
+  },200);
+  else render();
+  updateProgress();
+  updateBottomBar();
+  checkComplete();
+}
+
+function skipItem(i){
+  activeItem=null;
+  const next=state.findIndex((s,idx)=>idx>i&&!s.confirmed);
+  if(next!==-1){activeItem=next;}
+  render();
+}
+
+// ── PROGRESS ──
+function updateProgress(){
+  const confirmed=state.filter(s=>s.confirmed).length;
+  const total=state.length;
+  const pct=Math.round(confirmed/total*100);
+  document.getElementById('prog-label').textContent=`Принято ${confirmed} из ${total}`;
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-fill').style.width=pct+'%';
+}
+
+function updateBottomBar(){
+  const accepted=state.filter(s=>s.confirmed).reduce((sum,s)=>sum+(s.actual||0),0);
+  const shortage=state.filter(s=>s.confirmed&&s.actual<s.planned).reduce((sum,s)=>sum+(s.planned-s.actual),0);
+  const defect=state.reduce((sum,s)=>sum+s.defect,0);
+  document.getElementById('db-accepted').textContent=accepted;
+  document.getElementById('db-shortage').textContent=shortage;
+  document.getElementById('db-defect').textContent=defect;
+}
+
+function checkComplete(){
+  const allDone=state.every(s=>s.confirmed);
+  document.getElementById('btn-complete').disabled=!allDone;
+}
+
+// ── ACT ──
+function buildActText(){
+  const discrepancies=state.filter(s=>s.confirmed&&(s.actual!==s.planned||s.defect>0));
+  if(!discrepancies.length) return 'Расхождений не обнаружено.\nВсе позиции приняты в полном объёме.';
+
+  const today=new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'});
+  let text=`АКТ РАСХОЖДЕНИЙ\n`;
+  text+=`Дата: ${today}\n`;
+  text+=`Поставщик: ${invoice.supplier}\n`;
+  text+=`Накладная: ${invoice.invoiceNum}\n`;
+  text+=`Заказ: ${invoice.po}\n`;
+  text+=`Магазин: ${invoice.store}\n`;
+  text+=`Водитель: ${invoice.driver}\n\n`;
+  text+=`РАСХОЖДЕНИЯ:\n`;
+  text+='─'.repeat(40)+'\n';
+  discrepancies.forEach(s=>{
+    const diff=s.actual-s.planned;
+    text+=`${s.name}\n`;
+    text+=`  Заявлено: ${s.planned} ${s.unit}\n`;
+    text+=`  Принято:  ${s.actual} ${s.unit}`;
+    if(diff!==0) text+=` (${diff>0?'+':''}${diff})`;
+    text+='\n';
+    if(s.defect>0) text+=`  Брак:     ${s.defect} ${s.unit}\n`;
+    if(s.note) text+=`  Примеч.:  ${s.note}\n`;
+    text+='\n';
+  });
+  const totalShortage=discrepancies.reduce((sum,s)=>sum+Math.max(0,s.planned-s.actual),0);
+  const totalSurplus=discrepancies.reduce((sum,s)=>sum+Math.max(0,s.actual-s.planned),0);
+  const totalDefect=discrepancies.reduce((sum,s)=>sum+s.defect,0);
+  text+='─'.repeat(40)+'\n';
+  if(totalShortage>0) text+=`Итого недостача: ${totalShortage} ед.\n`;
+  if(totalSurplus>0) text+=`Итого избыток: ${totalSurplus} ед.\n`;
+  if(totalDefect>0) text+=`Итого брак: ${totalDefect} ед.\n`;
+  text+='\nПодписи сторон:\n\n';
+  text+=`Приёмщик: ________________\n`;
+  text+=`Водитель: ________________`;
+  return text;
+}
+
+function showAct(){
+  const discrepancies=state.filter(s=>s.confirmed&&(s.actual!==s.planned||s.defect>0));
+  document.getElementById('act-doc').textContent=buildActText();
+  document.getElementById('act-overlay').classList.add('show');
+}
+function closeAct(){document.getElementById('act-overlay').classList.remove('show')}
+function signAct(){
+  closeAct();
+  toast('✓ Акт подписан и отправлен поставщику','var(--tl)','var(--tb)');
+}
+
+// ── COMPLETE ──
+function completeReceiving(){
+  const discrepancies=state.filter(s=>s.actual!==s.planned||s.defect>0);
+  const totalShortage=state.reduce((sum,s)=>sum+Math.max(0,s.planned-s.actual),0);
+  const totalDefect=state.reduce((sum,s)=>sum+s.defect,0);
+  const totalAccepted=state.reduce((sum,s)=>sum+(s.actual||0),0);
+  const hasDiscrepancy=discrepancies.length>0||totalDefect>0;
+
+  const comp=document.getElementById('completion');
+  comp.innerHTML=`
+    <div class="comp-icon">${hasDiscrepancy?'⚠️':'✅'}</div>
+    <div class="comp-title">${hasDiscrepancy?'Приёмка завершена с расхождениями':'Приёмка завершена'}</div>
+    <div class="comp-sub">${hasDiscrepancy
+      ?`Зафиксированы расхождения. Акт сформирован и отправлен поставщику — ${invoice.supplier} уже видит данные в своём кабинете.`
+      :'Все позиции приняты в полном объёме. Данные переданы в 1С.'
+    }</div>
+    <div class="comp-stats">
+      <div class="cs-row"><span class="cs-label">Поставщик</span><span class="cs-val">${invoice.supplier}</span></div>
+      <div class="cs-row"><span class="cs-label">Принято позиций</span><span class="cs-val" style="color:var(--tl)">${totalAccepted} ед.</span></div>
+      ${totalShortage?`<div class="cs-row"><span class="cs-label">Недостача</span><span class="cs-val" style="color:var(--cl)">−${totalShortage} ед.</span></div>`:''}
+      ${totalDefect?`<div class="cs-row"><span class="cs-label">Брак</span><span class="cs-val" style="color:var(--al)">${totalDefect} ед.</span></div>`:''}
+      <div class="cs-row"><span class="cs-label">Данные в 1С</span><span class="cs-val" style="color:var(--tl)">Записаны</span></div>
+      <div class="cs-row"><span class="cs-label">Поставщик уведомлён</span><span class="cs-val" style="color:var(--tl)">${hasDiscrepancy?'Акт отправлен':'Принято без замечаний'}</span></div>
+    </div>
+    <div class="comp-actions">
+      ${hasDiscrepancy?`<button class="comp-btn comp-btn-warn" onclick="viewAct()">📄 Просмотр акта расхождений</button>`:''}
+      <button class="comp-btn comp-btn-primary" onclick="resetAll()">← Новая приёмка</button>
+    </div>`;
+  comp.classList.add('show');
+}
+
+function viewAct(){
+  document.getElementById('completion').classList.remove('show');
+  showAct();
+}
+
+function resetAll(){
+  document.getElementById('completion').classList.remove('show');
+  state.forEach(s=>{s.actual=null;s.defect=0;s.note='';s.confirmed=false;});
+  activeItem=null;
+  render();
+  updateProgress();
+  updateBottomBar();
+  document.getElementById('btn-complete').disabled=true;
+}
+
+// ── TOAST ──
+function toast(msg,color='var(--tl)',border='var(--tb)'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.color=color;
+  el.style.borderColor=border;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ── INIT ──
+render();
+// Auto-open first item
+setTimeout(()=>{activeItem=0;render();},300);
+</script>
+
+<!-- GLOBAL NAV -->
+<style>
+.gnav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(10,14,20,0.96);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.11);border-radius:50px;padding:6px 8px;display:flex;gap:2px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.55);font-family:"JetBrains Mono",monospace}
+.gni{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:40px;font-size:11px;color:rgba(255,255,255,0.42);cursor:pointer;transition:all .18s;text-decoration:none;border:1px solid transparent;white-space:nowrap}
+.gni:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.06)}
+.gni.on{background:rgba(59,130,246,0.14);border-color:rgba(59,130,246,0.32);color:#93c5fd}
+.gni-icon{font-size:13px}
+.gn-sep{width:1px;background:rgba(255,255,255,0.08);margin:4px 3px}
+.gni-out{display:flex;align-items:center;gap:5px;padding:7px 11px;border-radius:40px;font-size:10px;color:rgba(255,255,255,0.28);cursor:pointer;transition:all .18s;border:1px solid transparent}
+.gni-out:hover{color:rgba(239,68,68,0.75);border-color:rgba(239,68,68,0.18);background:rgba(239,68,68,0.06)}
+@media(max-width:600px){.gnav{bottom:10px;padding:4px 6px}.gni{padding:6px 9px;font-size:10px}.gni-lbl{display:none}}
+</style>
+<div class="gnav">
+  <a class="gni" href="veyseloglu_operator.html" title="Рабочее место оператора"><span class="gni-icon">📄</span><span class="gni-lbl">Оператор</span></a>
+  <a class="gni" href="veyseloglu_manager.html" title="Менеджер по закупкам"><span class="gni-icon">📊</span><span class="gni-lbl">Менеджер</span></a>
+  <a class="gni" href="veyseloglu_chat.html" title="Чат с агентами"><span class="gni-icon">🤖</span><span class="gni-lbl">Агенты</span></a>
+  <a class="gni" href="veyseloglu_supplier.html" title="Портал поставщика"><span class="gni-icon">📤</span><span class="gni-lbl">Поставщик</span></a>
+  <a class="gni" href="veyseloglu_receipt_os.html" title="Архитектурная схема"><span class="gni-icon">🗺</span><span class="gni-lbl">Схема</span></a>
+  <div class="gn-sep"></div>
+  <div class="gni-out" onclick="location.href='index.html'">← Выход</div>
+</div>
+<script>
+(function(){
+  var p=location.pathname.split("/").pop()||"index.html";
+  document.querySelectorAll(".gnav .gni").forEach(function(a){
+    if(a.getAttribute("href")===p) a.classList.add("on");
+  });
+})();
+<\/script>
+</body>
+</html>

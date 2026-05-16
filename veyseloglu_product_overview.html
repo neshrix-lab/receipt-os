@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receipt OS · Обзор продукта</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06080c;--s1:#0a0e15;--s2:#0f141d;--s3:#151c28;--s4:#1c2638;
+  --b0:rgba(255,255,255,0.04);--b1:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.13);
+  --text:#e8eef8;--text2:#9aabc4;--muted:#5a6a82;--dim:#2a3a50;
+  --blue:#3b82f6;--bl:#93c5fd;--bd:rgba(59,130,246,0.10);--bb:rgba(59,130,246,0.28);
+  --teal:#10b981;--tl:#6ee7b7;--td:rgba(16,185,129,0.10);--tb:rgba(16,185,129,0.28);
+  --amber:#f59e0b;--al:#fbbf24;--ad:rgba(245,158,11,0.10);--ab:rgba(245,158,11,0.28);
+  --coral:#ef4444;--cl:#fca5a5;--cd:rgba(239,68,68,0.10);--cb:rgba(239,68,68,0.28);
+  --purple:#8b5cf6;--pl:#c4b5fd;--pd:rgba(139,92,246,0.11);--pb:rgba(139,92,246,0.28);
+  --gold:#d97706;--gl:#fcd34d;--gd:rgba(217,119,6,0.10);--gb:rgba(217,119,6,0.26);
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;min-height:100vh}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.007) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,0.007) 1px,transparent 1px);
+  background-size:54px 54px;pointer-events:none;z-index:0;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:48px 32px 80px;position:relative;z-index:1}
+
+/* ── HERO ── */
+.hero{margin-bottom:72px;text-align:left}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--teal);margin-bottom:18px}
+.hero-title{font-size:64px;font-weight:900;letter-spacing:-.04em;line-height:1.0;margin-bottom:22px;background:linear-gradient(180deg,#fff 0%,#94a3b8 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-title em{color:var(--bl);font-style:normal;-webkit-text-fill-color:var(--bl)}
+.hero-sub{font-size:18px;color:var(--text2);max-width:700px;line-height:1.65;margin-bottom:32px;font-weight:400}
+.hero-meta{display:flex;gap:8px;flex-wrap:wrap}
+.meta-tag{font-family:var(--mono);font-size:10px;padding:5px 12px;border-radius:20px;border:1px solid var(--b2);color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.meta-tag.featured{border-color:var(--tb);color:var(--tl);background:var(--td)}
+
+/* ── BIG STATS ── */
+.big-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:72px}
+.bs-card{
+  background:var(--s2);border:1px solid var(--b1);border-radius:16px;
+  padding:24px 22px;position:relative;overflow:hidden;
+}
+.bs-card::after{content:'';position:absolute;top:-40%;right:-20%;width:120%;height:80%;background:radial-gradient(circle,var(--bg-glow,rgba(59,130,246,0.1)) 0%,transparent 60%);pointer-events:none}
+.bs-card.purple{--bg-glow:rgba(139,92,246,0.1)}
+.bs-card.teal{--bg-glow:rgba(16,185,129,0.1)}
+.bs-card.amber{--bg-glow:rgba(245,158,11,0.1)}
+.bs-num{font-size:42px;font-weight:900;letter-spacing:-.03em;line-height:1;margin-bottom:6px;position:relative;z-index:1}
+.bs-num.blue{color:var(--bl)}
+.bs-num.purple{color:var(--pl)}
+.bs-num.teal{color:var(--tl)}
+.bs-num.amber{color:var(--al)}
+.bs-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:4px;position:relative;z-index:1}
+.bs-sub{font-size:12px;color:var(--text2);position:relative;z-index:1;line-height:1.4}
+
+/* ── TOC ── */
+.toc{
+  background:var(--s2);border:1px solid var(--b1);border-radius:18px;
+  padding:24px 28px;margin-bottom:80px;
+}
+.toc-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:16px}
+.toc-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.toc-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:10px;
+  color:var(--text2);text-decoration:none;font-size:14px;
+  border:1px solid transparent;transition:all .15s;
+}
+.toc-item:hover{background:var(--s3);border-color:var(--b1);color:var(--text);transform:translateX(2px)}
+.toc-num{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:24px}
+
+/* ── SECTION ── */
+.section{margin-bottom:80px;scroll-margin-top:24px}
+.sec-head{margin-bottom:24px}
+.sec-num{font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:.16em;margin-bottom:8px;text-transform:uppercase;font-weight:500}
+.sec-title{font-size:36px;font-weight:800;letter-spacing:-.025em;line-height:1.1;margin-bottom:10px}
+.sec-intro{font-size:16px;color:var(--text2);max-width:740px;line-height:1.7}
+
+/* ── PROSE ── */
+.prose{max-width:780px;font-size:15px;line-height:1.75;color:var(--text2);margin-bottom:24px}
+.prose strong{color:var(--text);font-weight:600}
+.prose code{font-family:var(--mono);font-size:12px;background:var(--s3);padding:2px 7px;border-radius:5px;color:var(--bl);border:1px solid var(--b1)}
+.prose p{margin-bottom:14px}
+
+/* ── PROBLEM/SOLUTION CARD ── */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.compare-card{
+  background:var(--s2);border:1px solid var(--b1);border-radius:14px;
+  padding:22px 24px;
+}
+.compare-card.problem{border-left:3px solid var(--coral)}
+.compare-card.solution{border-left:3px solid var(--teal)}
+.cc-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:14px}
+.compare-card.problem .cc-label{color:var(--cl)}
+.compare-card.solution .cc-label{color:var(--tl)}
+.cc-title{font-size:16px;font-weight:700;margin-bottom:12px;letter-spacing:-.01em}
+.cc-list{display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.6}
+.cc-item{display:flex;gap:9px;align-items:flex-start;color:var(--text2)}
+.cc-item-icon{flex-shrink:0;font-size:12px;line-height:1.6}
+.problem .cc-item-icon{color:var(--coral)}
+.solution .cc-item-icon{color:var(--teal)}
+
+/* ── BIG QUOTE ── */
+.quote-block{
+  background:var(--s2);border:1px solid var(--b1);border-radius:16px;
+  padding:32px 36px;margin-bottom:24px;position:relative;overflow:hidden;
+}
+.quote-block::before{
+  content:'"';position:absolute;top:-20px;left:20px;
+  font-size:140px;font-weight:900;color:var(--pd);font-family:var(--font);
+  line-height:1;pointer-events:none;
+}
+.quote-text{font-size:20px;line-height:1.5;font-weight:500;color:var(--text);margin-bottom:14px;position:relative;z-index:1;font-style:italic}
+.quote-attribution{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;position:relative;z-index:1}
+
+/* ── FEATURE GRID ── */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.feat{
+  background:var(--s2);border:1px solid var(--b1);border-radius:14px;
+  padding:22px;transition:all .2s;
+}
+.feat:hover{border-color:var(--b2);transform:translateY(-3px)}
+.feat-icon{font-size:28px;margin-bottom:14px;display:block}
+.feat-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.feat-desc{font-size:13px;color:var(--text2);line-height:1.6}
+
+/* ── WORKFLOW STEPS ── */
+.workflow{display:flex;flex-direction:column;gap:0;margin-bottom:24px}
+.step-row{
+  display:flex;align-items:flex-start;gap:18px;
+  padding:20px 0;position:relative;
+}
+.step-row:not(:last-child)::after{
+  content:'';position:absolute;
+  left:21px;top:60px;bottom:-8px;width:1px;
+  background:linear-gradient(to bottom,var(--b2),transparent);
+}
+.step-num{
+  width:42px;height:42px;border-radius:50%;
+  background:var(--s2);border:1.5px solid var(--b2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:13px;font-weight:700;
+  flex-shrink:0;position:relative;z-index:1;
+}
+.step-num.active{background:var(--bd);border-color:var(--blue);color:var(--bl)}
+.step-num.agent{background:var(--pd);border-color:var(--purple);color:var(--pl)}
+.step-body{flex:1;padding-top:8px}
+.step-name{font-size:15px;font-weight:700;margin-bottom:6px}
+.step-desc{font-size:13px;color:var(--text2);line-height:1.6}
+.step-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap}
+.step-tag{padding:2px 8px;border-radius:4px;background:var(--s3);border:1px solid var(--b1)}
+
+/* ── AGENT CARDS ── */
+.agents-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px}
+.agent-card{
+  background:var(--s2);border:1px solid var(--b1);border-radius:14px;
+  padding:22px;position:relative;overflow:hidden;
+}
+.agent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.agent-card.purple::before{background:linear-gradient(90deg,var(--purple),transparent)}
+.agent-card.teal::before{background:linear-gradient(90deg,var(--teal),transparent)}
+.agent-card.amber::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.agent-card.coral::before{background:linear-gradient(90deg,var(--coral),transparent)}
+.agent-card.blue::before{background:linear-gradient(90deg,var(--blue),transparent)}
+.agent-card.gold::before{background:linear-gradient(90deg,var(--gold),transparent)}
+.ag-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.ag-icon{font-size:28px}
+.ag-name{font-size:15px;font-weight:700}
+.ag-tag{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;margin-left:auto}
+.tag-ai{background:var(--pd);border:1px solid var(--pb);color:var(--pl)}
+.tag-code{background:var(--b0);border:1px solid var(--b1);color:var(--muted)}
+.ag-desc{font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:10px}
+.ag-saves{font-family:var(--mono);font-size:11px;background:var(--td);border:1px solid var(--tb);color:var(--tl);padding:7px 11px;border-radius:7px;display:inline-block}
+
+/* ── BEFORE/AFTER ── */
+.ba-block{
+  background:var(--s2);border:1px solid var(--b1);border-radius:16px;
+  padding:24px 28px;margin-bottom:24px;
+}
+.ba-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--b0)}
+.ba-icon{font-size:30px;flex-shrink:0}
+.ba-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.ba-meta{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.ba-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.ba-col-head{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--b0)}
+.ba-col.before .ba-col-head{color:var(--cl)}
+.ba-col.after .ba-col-head{color:var(--tl)}
+.ba-step{display:flex;gap:9px;font-size:13px;line-height:1.55;color:var(--text2);margin-bottom:10px;align-items:flex-start}
+.ba-step:last-child{margin-bottom:0}
+.ba-step-num{font-family:var(--mono);font-size:11px;flex-shrink:0;width:18px;line-height:1.6}
+.before .ba-step-num{color:var(--cl)}
+.after .ba-step-num{color:var(--tl)}
+.ba-step-text strong{color:var(--text);font-weight:600}
+.ba-result{margin-top:14px;padding:10px 14px;background:var(--s3);border-radius:8px;font-family:var(--mono);font-size:11px;display:flex;align-items:center;gap:7px}
+.before .ba-result{color:var(--cl)}
+.after .ba-result{color:var(--tl)}
+
+/* ── CALLOUT ── */
+.callout{
+  background:var(--s2);border:1px solid var(--b1);border-radius:14px;
+  padding:18px 24px;margin-bottom:24px;border-left:4px solid;
+  display:flex;gap:16px;align-items:flex-start;
+}
+.callout.key{border-left-color:var(--blue)}
+.callout.warn{border-left-color:var(--amber)}
+.callout.info{border-left-color:var(--purple)}
+.callout.success{border-left-color:var(--teal)}
+.co-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.co-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:5px}
+.co-text{font-size:14px;line-height:1.65;color:var(--text)}
+
+/* ── STAT ROW ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-item{
+  background:var(--s2);border:1px solid var(--b1);border-radius:12px;
+  padding:18px 20px;
+}
+.stat-num{font-size:28px;font-weight:800;letter-spacing:-.025em;line-height:1;margin-bottom:6px}
+.stat-num.green{color:var(--tl)}
+.stat-num.red{color:var(--cl)}
+.stat-num.blue{color:var(--bl)}
+.stat-num.purple{color:var(--pl)}
+.stat-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:3px}
+.stat-desc{font-size:12px;color:var(--text2);line-height:1.4}
+
+/* ── ROLES MAP ── */
+.roles-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.role-card{
+  background:var(--s2);border:1px solid var(--b1);border-radius:14px;
+  padding:20px;
+}
+.role-avatar{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:14px;
+}
+.ra-leyla{background:var(--pd);border:1px solid var(--pb)}
+.ra-irada{background:var(--td);border:1px solid var(--tb)}
+.ra-supplier{background:var(--bd);border:1px solid var(--bb)}
+.role-name{font-size:15px;font-weight:700;margin-bottom:3px}
+.role-title{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.1em}
+.role-pages{display:flex;flex-direction:column;gap:7px}
+.role-page{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text2)}
+.role-page-icon{font-size:14px}
+
+/* ── FOOTER ── */
+.footer{
+  margin-top:100px;padding-top:36px;border-top:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-left{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.footer-right{font-family:var(--mono);font-size:10px;color:var(--dim)}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.section{animation:fadeUp .4s ease both}
+
+/* ── PRINT ── */
+@media print{
+  body::before{display:none}
+  .wrap{padding:20px}
+  .section{animation:none;page-break-inside:avoid}
+  .compare,.features,.agents-grid,.roles-row{break-inside:avoid}
+  .toc{page-break-after:always}
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:780px){
+  .hero-title{font-size:42px}
+  .sec-title{font-size:28px}
+  .big-stats{grid-template-columns:1fr 1fr}
+  .compare{grid-template-columns:1fr}
+  .features{grid-template-columns:1fr}
+  .agents-grid{grid-template-columns:1fr}
+  .roles-row{grid-template-columns:1fr}
+  .ba-grid{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:1fr 1fr}
+  .toc-list{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Receipt OS · Обзор продукта</div>
+  <h1 class="hero-title">Operating System<br>для приёмки и <em>контроля</em><br>в ретейл-сети</h1>
+  <p class="hero-sub">
+    Receipt OS — это интеллектуальный слой над 1С для автоматизации работы с накладными, контроля остатков,
+    управления отношениями с поставщиками и предотвращения внутренних потерь. Не CRM, не WMS,
+    не учётная система — а уровень над ними, где работают AI-агенты и принимаются решения.
+  </p>
+  <div class="hero-meta">
+    <span class="meta-tag featured">Veysəloğlu Group</span>
+    <span class="meta-tag">2026</span>
+    <span class="meta-tag">NESHRIX Agency</span>
+    <span class="meta-tag">v1.0</span>
+  </div>
+</div>
+
+<!-- BIG STATS -->
+<div class="big-stats">
+  <div class="bs-card">
+    <div class="bs-label">Время на накладную</div>
+    <div class="bs-num blue">2.4 мин</div>
+    <div class="bs-sub">было 28 мин → −91%</div>
+  </div>
+  <div class="bs-card purple">
+    <div class="bs-label">Автоматизация</div>
+    <div class="bs-num purple">94%</div>
+    <div class="bs-sub">накладных проводятся без оператора</div>
+  </div>
+  <div class="bs-card teal">
+    <div class="bs-label">Поймано расхождений</div>
+    <div class="bs-num teal">38 600 ₼</div>
+    <div class="bs-sub">за май 2026</div>
+  </div>
+  <div class="bs-card amber">
+    <div class="bs-label">Экономия ФОТ</div>
+    <div class="bs-num amber">147 200 ₼</div>
+    <div class="bs-sub">в месяц</div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div class="toc-label">Содержание</div>
+  <div class="toc-list">
+    <a class="toc-item" href="#s1"><span class="toc-num">01</span>Что это и зачем</a>
+    <a class="toc-item" href="#s2"><span class="toc-num">02</span>В чём уникальность</a>
+    <a class="toc-item" href="#s3"><span class="toc-num">03</span>Как это работает</a>
+    <a class="toc-item" href="#s4"><span class="toc-num">04</span>Шесть AI-агентов</a>
+    <a class="toc-item" href="#s5"><span class="toc-num">05</span>Что получает бэк-офис</a>
+    <a class="toc-item" href="#s6"><span class="toc-num">06</span>До и после</a>
+    <a class="toc-item" href="#s7"><span class="toc-num">07</span>Что мы построили</a>
+    <a class="toc-item" href="#s8"><span class="toc-num">08</span>Резюме</a>
+  </div>
+</div>
+
+<!-- ─── 01 ─── -->
+<section class="section" id="s1">
+  <div class="sec-head">
+    <div class="sec-num">01</div>
+    <h2 class="sec-title">Что это и зачем нужно</h2>
+  </div>
+
+  <div class="prose">
+    <p>
+      Каждый день крупная ретейл-сеть получает сотни накладных от поставщиков. Их нужно:
+      <strong>распознать</strong>, <strong>сверить с заказом</strong>, <strong>проверить SKU</strong>,
+      <strong>зафиксировать расхождения</strong>, <strong>провести в 1С</strong>, и при необходимости
+      <strong>выставить претензию</strong>.
+    </p>
+    <p>
+      Эту работу делают операторы и бухгалтеры. В сети уровня Veysəloğlu это
+      <strong>15-20 человек</strong> только на ручную обработку документов.
+      Средняя накладная требует 28 минут работы, а средняя ошибка обнаруживается через 3-5 дней —
+      когда что-то уже потеряно.
+    </p>
+    <p>
+      Receipt OS забирает эту работу на себя. Не одну задачу — а весь процесс целиком:
+      от поступления накладной до решения категорийного менеджера. За людьми остаётся
+      только то что требует человеческого решения.
+    </p>
+  </div>
+
+  <div class="compare">
+    <div class="compare-card problem">
+      <div class="cc-label">Без системы</div>
+      <div class="cc-title">Бэк-офис тонет в рутине</div>
+      <div class="cc-list">
+        <div class="cc-item"><span class="cc-item-icon">✕</span><span>Операторы вручную вбивают данные из накладных</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✕</span><span>Бухгалтер проверяет каждую цифру глазами</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✕</span><span>Менеджер ищет данные в почте, WhatsApp и Excel</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✕</span><span>Претензии пишутся вручную каждый раз с нуля</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✕</span><span>Расхождения обнаруживаются через дни и недели</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✕</span><span>Потери на маршрутах «склад→магазин» никто не считает</span></div>
+      </div>
+    </div>
+    <div class="compare-card solution">
+      <div class="cc-label">С Receipt OS</div>
+      <div class="cc-title">Бэк-офис работает решениями</div>
+      <div class="cc-list">
+        <div class="cc-item"><span class="cc-item-icon">✓</span><span>Накладные распознаются автоматически (OCR + AI)</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✓</span><span>Сверка с заказом и SKU — за секунды</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✓</span><span>Все коммуникации в одном окне с контекстом</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✓</span><span>Агент пишет претензию, человек подписывает</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✓</span><span>Расхождения видны в момент приёмки</span></div>
+        <div class="cc-item"><span class="cc-item-icon">✓</span><span>Потери по маршрутам фиксируются автоматически</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout key">
+    <div class="co-icon">🎯</div>
+    <div>
+      <div class="co-label">Главная идея</div>
+      <div class="co-text">
+        Receipt OS — это не ещё одна программа учёта. Это <strong>интеллектуальный слой</strong>,
+        который читает данные из 1С, прогоняет их через AI-агентов и возвращает менеджеру не цифры,
+        а <strong>готовые решения</strong>. 1С остаётся источником истины — Receipt OS делает
+        её действенной.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 02 ─── -->
+<section class="section" id="s2">
+  <div class="sec-head">
+    <div class="sec-num">02</div>
+    <h2 class="sec-title">В чём уникальность</h2>
+    <p class="sec-intro">
+      На рынке есть OCR-сервисы, CRM-системы, WMS, EDI-провайдеры.
+      Каждый закрывает свою задачу. Receipt OS закрывает <strong>процесс целиком</strong>.
+    </p>
+  </div>
+
+  <div class="features">
+    <div class="feat">
+      <span class="feat-icon">🧠</span>
+      <div class="feat-title">Контекст вокруг данных</div>
+      <div class="feat-desc">Цифра в накладной — это не просто число. Это история поставщика, текущие остатки, ждущие магазины, прогноз потребления. Receipt OS показывает всё сразу.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🤖</span>
+      <div class="feat-title">Агенты как ассистенты</div>
+      <div class="feat-desc">Шесть специализированных AI-агентов: один считает остатки, второй прогнозирует дефицит, третий ищет аномалии, четвёртый пишет претензии. Менеджер дирижирует ими.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🔗</span>
+      <div class="feat-title">Над 1С, не вместо</div>
+      <div class="feat-desc">1С остаётся источником истины. Receipt OS читает её данные и пишет обратно правильные документы. Не дублирует, не заменяет — усиливает.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">📤</span>
+      <div class="feat-title">Двусторонняя связь с поставщиками</div>
+      <div class="feat-desc">Поставщик сам загружает накладную через портал. Видит статус, расхождения, претензии. Это меняет процесс приёмки с реактивного на проактивный.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🛡</span>
+      <div class="feat-title">Контроль внутренних потерь</div>
+      <div class="feat-desc">Система видит расхождения не только на приёмке от поставщика, но и при перемещениях «склад→магазин». То что 1С не показывает — Receipt OS подсвечивает.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">💬</span>
+      <div class="feat-title">Один интерфейс для всего</div>
+      <div class="feat-desc">Менеджер не переключается между почтой, WhatsApp, 1С и Excel. Все каналы коммуникации с поставщиками и весь контекст — в одном окне.</div>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="co-icon">💡</div>
+    <div>
+      <div class="co-label">Отличие от рынка</div>
+      <div class="co-text">
+        Классические решения автоматизируют <strong>одну задачу</strong> — OCR делает OCR, CRM ведёт переписку, WMS управляет складом. Receipt OS — это <strong>оркестратор всего процесса</strong>: от появления документа до закрытия претензии. Каждый шаг делается агентом, человек принимает решения только там где это нужно.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 03 ─── -->
+<section class="section" id="s3">
+  <div class="sec-head">
+    <div class="sec-num">03</div>
+    <h2 class="sec-title">Как это работает</h2>
+    <p class="sec-intro">
+      Полный цикл — от того момента когда поставщик отгружает товар, до момента когда расхождение становится претензией с конкретной суммой.
+    </p>
+  </div>
+
+  <div class="workflow">
+    <div class="step-row">
+      <div class="step-num active">1</div>
+      <div class="step-body">
+        <div class="step-name">Поставщик загружает накладную</div>
+        <div class="step-desc">Через свой портал поставщика. Прикрепляет PDF или фото, выбирает заказ, отправляет. Это происходит <strong>до</strong> физической отгрузки товара.</div>
+        <div class="step-meta">
+          <span class="step-tag">Портал поставщика</span>
+          <span class="step-tag">Email · WhatsApp</span>
+          <span class="step-tag">е-Qaimə</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num agent">🤖</div>
+      <div class="step-body">
+        <div class="step-name">OCR-агент распознаёт документ</div>
+        <div class="step-desc">GPT-4o Vision извлекает все позиции: SKU, количество, цены, итоги. Точность 97-99% для PDF, 92-97% для фото. Время — 5-10 секунд.</div>
+        <div class="step-meta">
+          <span class="step-tag">GPT-4o Vision</span>
+          <span class="step-tag">~10 сек</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num agent">🤖</div>
+      <div class="step-body">
+        <div class="step-name">SKU-матчер находит позиции в 1С</div>
+        <div class="step-desc">Сопоставляет наименования из накладной со справочником номенклатуры Veysəloğlu. Использует семантический поиск — даже если поставщик переименовал товар, агент его узнаёт.</div>
+        <div class="step-meta">
+          <span class="step-tag">pgvector</span>
+          <span class="step-tag">Claude</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num agent">🤖</div>
+      <div class="step-body">
+        <div class="step-name">Сверка с заказом</div>
+        <div class="step-desc">Сравнивает каждую позицию накладной с согласованным заказом. Цены, количества — построчно. Подсвечивает любые отклонения.</div>
+        <div class="step-meta">
+          <span class="step-tag">Детерминированный код</span>
+          <span class="step-tag">~1 сек</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-name">Физическая приёмка в 1С</div>
+        <div class="step-desc">Приёмщик на складе принимает товар через 1С со сканером штрихкодов — как и раньше. Receipt OS читает результат: что фактически принято, где расхождения.</div>
+        <div class="step-meta">
+          <span class="step-tag">1С Склад</span>
+          <span class="step-tag">Сканер штрихкодов</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num agent">🤖</div>
+      <div class="step-body">
+        <div class="step-name">Агент-аномалист анализирует</div>
+        <div class="step-desc">Если есть расхождение — проверяет историю поставщика. Это разовая ошибка или системная проблема? Третий раз за месяц — значит паттерн, нужна претензия.</div>
+        <div class="step-meta">
+          <span class="step-tag">Claude</span>
+          <span class="step-tag">Pattern detection</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num agent">🤖</div>
+      <div class="step-body">
+        <div class="step-name">Агент-переговорщик пишет претензию</div>
+        <div class="step-desc">Генерирует официальный документ: кому, тема, таблица расхождений с конкретными деньгами, текст обращения. Менеджер только проверяет и подписывает.</div>
+        <div class="step-meta">
+          <span class="step-tag">Claude</span>
+          <span class="step-tag">2-3 сек</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <div class="step-name">Менеджер одобряет решение</div>
+        <div class="step-desc">Открывает Inbox, видит готовое решение, нажимает «✓ Отправить». Претензия уходит поставщику в портал и на email. Документ создаётся в 1С автоматически.</div>
+        <div class="step-meta">
+          <span class="step-tag">Ирада · 30 секунд</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num active">9</div>
+      <div class="step-body">
+        <div class="step-name">Цикл замкнут · поставщик отвечает</div>
+        <div class="step-desc">Поставщик видит претензию в своём кабинете, отвечает корректировочным счётом. Receipt OS фиксирует возврат денег и обновляет рейтинг поставщика.</div>
+        <div class="step-meta">
+          <span class="step-tag">Портал поставщика</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 04 ─── -->
+<section class="section" id="s4">
+  <div class="sec-head">
+    <div class="sec-num">04</div>
+    <h2 class="sec-title">Шесть AI-агентов</h2>
+    <p class="sec-intro">
+      Каждый агент решает одну задачу. Вместе они закрывают полный цикл управления приёмкой, остатками и поставщиками.
+    </p>
+  </div>
+
+  <div class="agents-grid">
+    <div class="agent-card blue">
+      <div class="ag-head">
+        <div class="ag-icon">🔄</div>
+        <div class="ag-name">Агент-агрегатор</div>
+        <span class="ag-tag tag-code">Код</span>
+      </div>
+      <div class="ag-desc">Собирает остатки со всех систем 1С (центральный склад + магазины сети), кэширует в Supabase для быстрого доступа другими агентами.</div>
+      <div class="ag-saves">Освобождает: техническая база</div>
+    </div>
+
+    <div class="agent-card purple">
+      <div class="ag-head">
+        <div class="ag-icon">🔮</div>
+        <div class="ag-name">Агент-прогноз потребления</div>
+        <span class="ag-tag tag-ai">AI</span>
+      </div>
+      <div class="ag-desc">Смотрит на историю продаж и расхода → предсказывает когда закончится товар на каждом складе. Не статистика — конкретная рекомендация.</div>
+      <div class="ag-saves">Освобождает: 4-6 часов/день аналитика</div>
+    </div>
+
+    <div class="agent-card amber">
+      <div class="ag-head">
+        <div class="ag-icon">📋</div>
+        <div class="ag-name">Агент-планировщик заказов</div>
+        <span class="ag-tag tag-ai">AI</span>
+      </div>
+      <div class="ag-desc">Объединяет прогноз + рейтинги поставщиков + сроки доставки → предлагает что и когда заказывать. Учитывает альтернативных поставщиков для надёжности.</div>
+      <div class="ag-saves">Освобождает: 2-3 часа/день закупщика</div>
+    </div>
+
+    <div class="agent-card teal">
+      <div class="ag-head">
+        <div class="ag-icon">🚚</div>
+        <div class="ag-name">Агент-распределитель</div>
+        <span class="ag-tag tag-ai">AI</span>
+      </div>
+      <div class="ag-desc">Видит остатки 500+ магазинов и центральный склад → находит переполнения и недостачи, предлагает оптимальное перераспределение между магазинами.</div>
+      <div class="ag-saves">Освобождает: 3-4 часа/день логиста</div>
+    </div>
+
+    <div class="agent-card coral">
+      <div class="ag-head">
+        <div class="ag-icon">⚠️</div>
+        <div class="ag-name">Агент-аномалист</div>
+        <span class="ag-tag tag-ai">AI</span>
+      </div>
+      <div class="ag-desc">Мониторит паттерны: систематические недопоставки, регулярные расхождения цен, странные потери на маршрутах «склад→магазин». Эскалирует в Inbox.</div>
+      <div class="ag-saves">Освобождает: предотвращает потери</div>
+    </div>
+
+    <div class="agent-card gold">
+      <div class="ag-head">
+        <div class="ag-icon">📨</div>
+        <div class="ag-name">Агент-переговорщик</div>
+        <span class="ag-tag tag-ai">AI</span>
+      </div>
+      <div class="ag-desc">Драфтит претензии, ответы поставщикам, запросы на корректировки. Готовый текст с конкретными цифрами — менеджер только проверяет.</div>
+      <div class="ag-saves">Освобождает: 15-25 мин на каждое письмо</div>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="co-icon">🎼</div>
+    <div>
+      <div class="co-label">Оркестрация</div>
+      <div class="co-text">
+        Агенты работают независимо, но обмениваются результатами через общую базу.
+        Планировщик читает прогноз, аномалист видит план заказов, переговорщик использует данные аномалиста.
+        Это не один большой AI — это <strong>команда специалистов</strong>, каждый со своей задачей.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 05 ─── -->
+<section class="section" id="s5">
+  <div class="sec-head">
+    <div class="sec-num">05</div>
+    <h2 class="sec-title">Что получает бэк-офис</h2>
+    <p class="sec-intro">
+      Не «более удобный интерфейс», а конкретное сокращение рутинных задач. Вот что меняется для каждой роли.
+    </p>
+  </div>
+
+  <div class="roles-row">
+    <div class="role-card">
+      <div class="role-avatar ra-leyla">👩‍💼</div>
+      <div class="role-name">Оператор приёмки</div>
+      <div class="role-title">Лейла Мамедова</div>
+      <div class="role-pages">
+        <div class="role-page"><span class="role-page-icon">✓</span>Видит только проблемные накладные</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Не вводит данные руками</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Сверка цен и SKU автоматическая</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Камера для срочных фото</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>108 накладных вместо 1800</div>
+      </div>
+    </div>
+
+    <div class="role-card">
+      <div class="role-avatar ra-irada">👩‍💼</div>
+      <div class="role-name">Менеджер по закупкам</div>
+      <div class="role-title">Ирада Гусейнова</div>
+      <div class="role-pages">
+        <div class="role-page"><span class="role-page-icon">✓</span>Утром — готовый Inbox решений</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Рейтинг поставщиков рассчитан</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Претензии готовы — только подписать</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Прогнозы остатков по всей сети</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>1-2 часа работы вместо 8</div>
+      </div>
+    </div>
+
+    <div class="role-card">
+      <div class="role-avatar ra-supplier">🏭</div>
+      <div class="role-name">Поставщик</div>
+      <div class="role-title">Parvaз, Araz Food, Coca-Cola</div>
+      <div class="role-pages">
+        <div class="role-page"><span class="role-page-icon">✓</span>Свой кабинет с историей</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Загрузка накладной до отгрузки</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Прозрачные расхождения</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Переписка по официальному каналу</div>
+        <div class="role-page"><span class="role-page-icon">✓</span>Прогноз потребления видит</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="font-size:20px;font-weight:700;letter-spacing:-.015em;margin-bottom:14px;margin-top:36px">Конкретные задачи которые забирает Receipt OS</h3>
+
+  <div class="prose">
+    <p>
+      <strong>Ручной ввод данных из накладных.</strong> Раньше оператор тратил 28 минут на каждую накладную:
+      открыть PDF, посмотреть позиции, вбить количество, вбить цены, сверить итоги, провести в 1С.
+      Сейчас 94% накладных проходят без оператора. Те 6% что остаются — это случаи где
+      нужно человеческое решение, не ручная работа.
+    </p>
+
+    <p>
+      <strong>Поиск SKU в номенклатуре.</strong> Поставщик пишет «Масло сливочное 82% 200г Parvaз»,
+      в 1С это «PV-MSL-82». Раньше оператор искал руками — открывал справочник, фильтровал, выбирал.
+      Сейчас SKU-матчер находит за миллисекунды через семантический поиск.
+    </p>
+
+    <p>
+      <strong>Сверка с заказом.</strong> Распечатать заказ, найти строку, сравнить количество, сравнить цену,
+      пометить расхождения — это работа на час. Агент делает это за секунду и показывает только то что отличается.
+    </p>
+
+    <p>
+      <strong>Написание претензий.</strong> Формулировки, реквизиты, ссылки на договоры, расчёт сумм —
+      типовая претензия занимает 25-40 минут. Агент пишет за 3 секунды с конкретными цифрами из накладной.
+      Менеджер только проверяет тон и отправляет.
+    </p>
+
+    <p>
+      <strong>Поиск контекста.</strong> Поставщик прислал письмо? Нужно открыть 1С — посмотреть текущие заказы,
+      открыть историю переписки — найти предыдущие договорённости, открыть Excel — посмотреть рейтинг.
+      В Receipt OS весь контекст рядом с письмом автоматически.
+    </p>
+
+    <p>
+      <strong>Прогноз остатков и заказы.</strong> Когда закажем масло? Раньше — открыть отчёт, посмотреть остаток,
+      прикинуть расход, договориться с поставщиком. Сейчас — агент-планировщик показывает «Заказать сегодня
+      500 ед. у Parvaз или 400 ед. у Araz Dairy» с уже готовым черновиком документа.
+    </p>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-item">
+      <div class="stat-label">Экономия времени</div>
+      <div class="stat-num green">~85%</div>
+      <div class="stat-desc">сокращение рутинных задач</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Скорость обработки</div>
+      <div class="stat-num blue">12×</div>
+      <div class="stat-desc">быстрее ручного ввода</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Точность данных</div>
+      <div class="stat-num purple">99.2%</div>
+      <div class="stat-desc">меньше человеческих ошибок</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Окупаемость</div>
+      <div class="stat-num green">6-9 мес.</div>
+      <div class="stat-desc">по нашим расчётам</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 06 ─── -->
+<section class="section" id="s6">
+  <div class="sec-head">
+    <div class="sec-num">06</div>
+    <h2 class="sec-title">До и после</h2>
+    <p class="sec-intro">
+      Один день из жизни менеджера по закупкам. Что меняется на конкретном примере.
+    </p>
+  </div>
+
+  <div class="ba-block">
+    <div class="ba-head">
+      <div class="ba-icon">📨</div>
+      <div>
+        <div class="ba-title">Обработка претензии по расхождению цен</div>
+        <div class="ba-meta">Поставщик Parvaз · Накладная #ПГ-1192 · Расхождение +11% к заказу</div>
+      </div>
+    </div>
+
+    <div class="ba-grid">
+      <div class="ba-col before">
+        <div class="ba-col-head">Раньше · 60+ минут</div>
+        <div class="ba-step"><span class="ba-step-num">1.</span><span class="ba-step-text">Получили жалобу от бухгалтерии что Parvaз снова прислал завышенные цены</span></div>
+        <div class="ba-step"><span class="ba-step-num">2.</span><span class="ba-step-text">Открыли 1С, нашли накладную, открыли заказ, сверили построчно</span></div>
+        <div class="ba-step"><span class="ba-step-num">3.</span><span class="ba-step-text">Подняли историю — это уже третий раз? Перерыли Excel</span></div>
+        <div class="ba-step"><span class="ba-step-num">4.</span><span class="ba-step-text">Открыли почту, нашли предыдущую переписку с Parvaз</span></div>
+        <div class="ba-step"><span class="ba-step-num">5.</span><span class="ba-step-text">Скопировали реквизиты, написали претензию вручную</span></div>
+        <div class="ba-step"><span class="ba-step-num">6.</span><span class="ba-step-text">Посчитали сумму расхождения в Excel, вставили в письмо</span></div>
+        <div class="ba-step"><span class="ba-step-num">7.</span><span class="ba-step-text">Согласовали с директором по почте → отправили</span></div>
+        <div class="ba-result">⏱ 60-90 минут на одну претензию</div>
+      </div>
+
+      <div class="ba-col after">
+        <div class="ba-col-head">С Receipt OS · 2 минуты</div>
+        <div class="ba-step"><span class="ba-step-num">1.</span><span class="ba-step-text">Утром в Inbox: «Parvaз — расхождение 4 820 ₼, третий раз за месяц»</span></div>
+        <div class="ba-step"><span class="ba-step-num">2.</span><span class="ba-step-text">Открыли карточку — справа агент уже написал черновик претензии</span></div>
+        <div class="ba-step"><span class="ba-step-num">3.</span><span class="ba-step-text">Проверили текст: реквизиты, суммы, дедлайн — всё правильно</span></div>
+        <div class="ba-step"><span class="ba-step-num">4.</span><span class="ba-step-text">Нажали «✓ Подписать и отправить»</span></div>
+        <div class="ba-result">⚡ 2 минуты · претензия отправлена в портал и на email</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ba-block">
+    <div class="ba-head">
+      <div class="ba-icon">📦</div>
+      <div>
+        <div class="ba-title">Решение о срочном заказе масла</div>
+        <div class="ba-meta">Остаток на центральном складе критичный · нужно действовать</div>
+      </div>
+    </div>
+
+    <div class="ba-grid">
+      <div class="ba-col before">
+        <div class="ba-col-head">Раньше · 90+ минут</div>
+        <div class="ba-step"><span class="ba-step-num">1.</span><span class="ba-step-text">Кладовщик позвонил: «Масло заканчивается, что делаем?»</span></div>
+        <div class="ba-step"><span class="ba-step-num">2.</span><span class="ba-step-text">Открыли 1С, посмотрели остатки по всем складам</span></div>
+        <div class="ba-step"><span class="ba-step-num">3.</span><span class="ba-step-text">Посчитали средний расход за неделю в Excel</span></div>
+        <div class="ba-step"><span class="ba-step-num">4.</span><span class="ba-step-text">Прикинули на сколько дней хватит</span></div>
+        <div class="ba-step"><span class="ba-step-num">5.</span><span class="ba-step-text">Связались с Parvaз — есть в наличии, но цена дороже</span></div>
+        <div class="ba-step"><span class="ba-step-num">6.</span><span class="ba-step-text">Позвонили в Araz Dairy — у них альтернатива</span></div>
+        <div class="ba-step"><span class="ba-step-num">7.</span><span class="ba-step-text">Создали заказ в 1С, согласовали, отправили</span></div>
+        <div class="ba-result">⏱ 90-120 минут · и часто решение запаздывает</div>
+      </div>
+
+      <div class="ba-col after">
+        <div class="ba-col-head">С Receipt OS · 1 минута</div>
+        <div class="ba-step"><span class="ba-step-num">1.</span><span class="ba-step-text">В Inbox: «Масло 82% — закончится через 3 дня · 30 магазинов ждут»</span></div>
+        <div class="ba-step"><span class="ba-step-num">2.</span><span class="ba-step-text">Агент-планировщик: «Заказать 500 у Parvaз или 400 у Araz Dairy (96% надёжность)»</span></div>
+        <div class="ba-step"><span class="ba-step-num">3.</span><span class="ba-step-text">Решили: Araz Dairy лучше — нажали «Создать заказ»</span></div>
+        <div class="ba-result">⚡ 1 минута · заказ создан в 1С и отправлен поставщику</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout success">
+    <div class="co-icon">⚡</div>
+    <div>
+      <div class="co-label">Принцип</div>
+      <div class="co-text">
+        Receipt OS не делает работу за человека целиком. <strong>Агенты делают аналитику и подготовку</strong>, а человек принимает решение. Это в десятки раз быстрее ручного процесса, но <strong>контроль остаётся у менеджера</strong>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 07 ─── -->
+<section class="section" id="s7">
+  <div class="sec-head">
+    <div class="sec-num">07</div>
+    <h2 class="sec-title">Что мы построили</h2>
+    <p class="sec-intro">
+      Семь экранов закрывающих весь процесс — от логина до архитектурной документации.
+    </p>
+  </div>
+
+  <div class="features">
+    <div class="feat">
+      <span class="feat-icon">🔐</span>
+      <div class="feat-title">Логин с ролями</div>
+      <div class="feat-desc">Один вход для всех. По роли система отправляет в нужный интерфейс. Демо-аккаунты для каждой роли.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">📄</span>
+      <div class="feat-title">Рабочее место оператора</div>
+      <div class="feat-desc">Очередь накладных, камера, ручная сверка, претензии, переключение на сводку дня. Главный экран Лейлы.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">📊</span>
+      <div class="feat-title">Кабинет менеджера</div>
+      <div class="feat-desc">Inbox, Остатки, Поставщики (внешние + магазины), Заказы, Аналитика, Связь. Шесть разделов для Ирады.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">📤</span>
+      <div class="feat-title">Портал поставщика</div>
+      <div class="feat-desc">Загрузка накладных, история документов, переписка с Veysəloğlu. Закрытая зона для контрагентов.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🤖</span>
+      <div class="feat-title">Центр агентов</div>
+      <div class="feat-desc">Чат с 5 AI-агентами. Каждый со своей специализацией. Можно задавать вопросы и получать действия.</div>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🗺</span>
+      <div class="feat-title">Архитектурная схема</div>
+      <div class="feat-desc">Визуализация всех систем, потоков данных, агентов и точек интеграции. Для разговора с CTO клиента.</div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="co-icon">📐</div>
+    <div>
+      <div class="co-label">Что важно про прототип</div>
+      <div class="co-text">
+        Это полностью функциональный кликабельный прототип на чистом HTML/CSS/JS, который работает в любом браузере без сервера. Все экраны интерактивны, можно загружать файлы (симуляция OCR), переключаться между ролями, отправлять претензии. Для разработки реального продукта — это <strong>точная карта функциональности</strong>, которую разработчик превратит в работающее ПО.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 08 ─── -->
+<section class="section" id="s8">
+  <div class="sec-head">
+    <div class="sec-num">08</div>
+    <h2 class="sec-title">Резюме</h2>
+  </div>
+
+  <div class="prose">
+    <p>
+      Receipt OS — это <strong>не ещё одна программа</strong> для бэк-офиса. Это попытка построить
+      систему которая <strong>забирает рутину целиком</strong>, а не помогает её делать быстрее.
+    </p>
+    <p>
+      Классическая автоматизация даёт инструменты — людям всё равно нужно работать в этих инструментах.
+      <strong>AI-агенты делают работу</strong> — людям остаётся принимать решения.
+    </p>
+    <p>
+      Для крупной ретейл-сети это означает: <strong>15 человек ручного труда → 2 человека контроля</strong>.
+      Время на накладную: <strong>28 минут → 2.4 минуты</strong>. Расхождения находятся <strong>при приёмке</strong>,
+      а не через неделю в бухгалтерском отчёте.
+    </p>
+    <p>
+      Receipt OS работает <strong>поверх 1С</strong> — не заменяет, не дублирует, а делает её умной.
+      Все данные остаются в учётной системе клиента. Безопасность, история, аудит — на уровне корпоративных стандартов.
+    </p>
+    <p>
+      Прототип готов. <strong>Следующий шаг</strong> — пилотное внедрение, интеграция с реальной 1С Veysəloğlu,
+      запуск с двумя сотрудниками. Через 3 месяца — расширение на полноценную замену 15 рабочих мест.
+    </p>
+  </div>
+
+  <div class="callout key">
+    <div class="co-icon">🚀</div>
+    <div>
+      <div class="co-label">Готовы к разговору с CFO Veysəloğlu</div>
+      <div class="co-text">
+        У нас есть всё что нужно для предметного разговора: прототип, архитектура, цифры окупаемости,
+        чёткое разделение с 1С. Осталось показать это клиенту и начать пилот.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  <div class="footer-left">Receipt OS · Обзор продукта · v1.0</div>
+  <div class="footer-right">NESHRIX × Veysəloğlu · 2026</div>
+</div>
+
+</div>
+</body>
+</html>
