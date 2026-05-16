@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sinq OS · Агент</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090d;--s1:#0b0f16;--s2:#101620;--s3:#16202e;
+  --b0:rgba(255,255,255,0.04);--b1:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.13);
+  --text:#e4eaf6;--text2:#8fa0be;--muted:#4e6080;--dim:#2a3a50;
+  --blue:#2563eb;--bl:#93bbff;--bd:rgba(37,99,235,0.12);--bb:rgba(37,99,235,0.30);
+  --teal:#0ea87a;--tl:#5ddcb0;--td:rgba(14,168,122,0.10);--tb:rgba(14,168,122,0.28);
+  --amber:#d97706;--al:#fbbf24;--ad:rgba(217,119,6,0.11);--ab:rgba(217,119,6,0.30);
+  --coral:#dc2626;--cl:#fca5a5;--cd:rgba(220,38,38,0.11);--cb:rgba(220,38,38,0.28);
+  --purple:#7c3aed;--pl:#c4b5fd;--pd:rgba(124,58,237,0.12);--pb:rgba(124,58,237,0.28);
+  --gold:#b45309;--gl:#fcd34d;--gd:rgba(180,83,9,0.10);--gb:rgba(180,83,9,0.26);
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--font);color:var(--text);display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.008) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,0.008) 1px,transparent 1px);
+  background-size:52px 52px;pointer-events:none;z-index:0}
+
+.topbar{height:54px;background:var(--s1);border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;flex-shrink:0;position:relative;z-index:20}
+.tb-l{display:flex;align-items:center;gap:14px}
+.tb-logo{font-size:15px;font-weight:800;letter-spacing:-.015em}
+.tb-logo em{color:var(--bl);font-style:normal}
+.tb-sep{width:1px;height:20px;background:var(--b2)}
+.tb-badge{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;
+  text-transform:uppercase;letter-spacing:.12em}
+.rb-op{background:var(--pd);border:1px solid var(--pb);color:var(--pl)}
+.rb-mgr{background:var(--td);border:1px solid var(--tb);color:var(--tl)}
+.rb-adm{background:var(--gd);border:1px solid var(--gb);color:var(--gl)}
+.tb-name{font-size:13px;font-weight:600;color:var(--text2)}
+.tb-r{display:flex;align-items:center;gap:8px}
+.tb-api{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;
+  padding:4px 10px;border-radius:20px;background:var(--td);border:1px solid var(--tb);color:var(--tl)}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--teal);
+  animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.tb-back{font-family:var(--mono);font-size:10px;color:var(--muted);
+  padding:5px 10px;border-radius:8px;border:1px solid var(--b1);
+  cursor:pointer;transition:all .15s;text-decoration:none;display:flex;align-items:center;gap:5px}
+.tb-back:hover{border-color:var(--b2);color:var(--text2)}
+
+.layout{display:flex;flex:1;overflow:hidden;position:relative;z-index:1}
+
+.sidebar{width:240px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;overflow:hidden}
+.sb-head{padding:14px;border-bottom:1px solid var(--b0);flex-shrink:0}
+.ag-card{background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:13px}
+.ag-icon{font-size:26px;margin-bottom:8px}
+.ag-name{font-size:13px;font-weight:700;margin-bottom:3px}
+.ag-desc{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.5}
+.ag-model{font-family:var(--mono);font-size:9px;color:var(--dim);
+  margin-top:6px;padding-top:6px;border-top:1px solid var(--b0)}
+
+.sb-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;
+  letter-spacing:.14em;color:var(--dim);padding:12px 14px 5px;flex-shrink:0}
+.sb-cmds{padding:0 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto;flex:1;padding-bottom:8px}
+.sb-cmd{font-family:var(--mono);font-size:10px;padding:8px 10px;border-radius:8px;
+  border:1px solid var(--b0);color:var(--text2);cursor:pointer;transition:all .15s;
+  line-height:1.4;background:transparent;text-align:left;width:100%}
+.sb-cmd:hover{background:var(--s2);border-color:var(--b1);color:var(--text)}
+.sb-footer{padding:10px;border-top:1px solid var(--b0);flex-shrink:0}
+.sb-clear{width:100%;font-family:var(--mono);font-size:10px;padding:8px;
+  border-radius:8px;border:1px solid var(--b1);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .15s;text-align:center}
+.sb-clear:hover{border-color:var(--cb);color:var(--cl);background:var(--cd)}
+
+.chat-wrap{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.chat-head{padding:12px 18px;border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ch-info{display:flex;align-items:center;gap:10px}
+.ch-av{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:16px;flex-shrink:0}
+.ch-name{font-size:13px;font-weight:700;margin-bottom:1px}
+.ch-sub{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.ch-status{font-family:var(--mono);font-size:10px;color:var(--tl);
+  display:flex;align-items:center;gap:5px}
+
+.msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.msgs::-webkit-scrollbar{width:3px}
+.msgs::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+.msg{display:flex;flex-direction:column;animation:up .25s ease both}
+.msg.u{align-items:flex-end}
+.msg.a{align-items:flex-start}
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.msg-meta{font-family:var(--mono);font-size:10px;color:var(--dim);
+  margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.bubble{max-width:78%;padding:12px 16px;border-radius:14px;
+  font-size:13px;line-height:1.7;word-break:break-word}
+.u .bubble{background:linear-gradient(135deg,#1d3fa8,#1a38a0);
+  border:1px solid rgba(37,99,235,.35);border-radius:14px 14px 3px 14px;color:#fff}
+.a .bubble{background:var(--s2);border:1px solid var(--b1);
+  border-radius:3px 14px 14px 14px;color:var(--text)}
+.bubble code{font-family:var(--mono);font-size:11px;background:var(--s3);
+  padding:1px 6px;border-radius:4px;color:var(--bl)}
+.bubble pre{font-family:var(--mono);font-size:11px;background:var(--s3);
+  border:1px solid var(--b1);border-radius:8px;padding:12px;margin:8px 0;
+  overflow-x:auto;line-height:1.6;color:var(--text2);white-space:pre-wrap}
+.bubble strong{color:var(--text);font-weight:600}
+.bubble ul{padding-left:18px;margin:5px 0}
+.bubble li{margin-bottom:3px;color:var(--text2)}
+
+.thinking{display:none;align-items:center;gap:8px;padding:0 18px 10px;
+  font-family:var(--mono);font-size:11px;color:var(--muted)}
+.thinking.on{display:flex}
+.dots span{display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--muted);margin:0 2px;animation:b 1.2s ease infinite}
+.dots span:nth-child(2){animation-delay:.15s}
+.dots span:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+.input-zone{border-top:1px solid var(--b1);background:var(--s1);padding:12px 16px;flex-shrink:0}
+.input-box{display:flex;align-items:flex-end;gap:8px;background:var(--s2);
+  border:1px solid var(--b2);border-radius:12px;padding:7px 10px;transition:border-color .15s}
+.input-box:focus-within{border-color:var(--bb);box-shadow:0 0 0 3px rgba(37,99,235,.07)}
+textarea#field{flex:1;background:transparent;border:none;outline:none;color:var(--text);
+  font-family:var(--font);font-size:13px;resize:none;min-height:22px;max-height:120px;line-height:1.5}
+textarea#field::placeholder{color:var(--dim)}
+.send{width:32px;height:32px;border-radius:8px;background:var(--blue);border:none;
+  color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;
+  justify-content:center;transition:all .15s;flex-shrink:0}
+.send:hover{background:#1d4ed8;transform:scale(1.05)}
+.send:disabled{background:var(--b1);cursor:not-allowed;transform:none}
+.hint{font-family:var(--mono);font-size:9px;color:var(--dim);
+  padding:4px 2px 0;display:flex;justify-content:space-between}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--s3);border:1px solid var(--tb);border-radius:8px;
+  padding:9px 16px;font-family:var(--mono);font-size:11px;color:var(--tl);
+  z-index:100;transition:transform .3s cubic-bezier(.22,.68,0,1.2);
+  pointer-events:none;opacity:0;white-space:nowrap}
+.toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="tb-l">
+    <div class="tb-logo">Sinq<em> OS</em></div>
+    <div class="tb-sep"></div>
+    <span class="tb-badge" id="rb">...</span>
+    <span class="tb-name" id="rn">...</span>
+  </div>
+  <div class="tb-r">
+    <div class="tb-api"><div class="dot"></div>Claude API · активен</div>
+    <a class="tb-back" id="back" href="index.html">← Назад</a>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sb-head">
+      <div class="ag-card">
+        <div class="ag-icon" id="ai">🤖</div>
+        <div class="ag-name" id="an">Агент</div>
+        <div class="ag-desc" id="ad">Загружается…</div>
+        <div class="ag-model">claude-sonnet-4-6 · оркестратор</div>
+      </div>
+    </div>
+    <div class="sb-label">Быстрые команды</div>
+    <div class="sb-cmds" id="cmds"></div>
+    <div class="sb-footer">
+      <button class="sb-clear" onclick="clearChat()">🗑 Очистить чат</button>
+    </div>
+  </aside>
+
+  <div class="chat-wrap">
+    <div class="chat-head">
+      <div class="ch-info">
+        <div class="ch-av" id="av">🤖</div>
+        <div>
+          <div class="ch-name" id="cn">Агент Sinq OS</div>
+          <div class="ch-sub">Оркестратор · обрабатывает запросы через Claude API</div>
+        </div>
+      </div>
+      <div class="ch-status"><div class="dot"></div>Готов к работе</div>
+    </div>
+
+    <div class="msgs" id="msgs"></div>
+
+    <div class="thinking" id="thinking">
+      <div class="dots"><span></span><span></span><span></span></div>
+      Агент анализирует…
+    </div>
+
+    <div class="input-zone">
+      <div class="input-box">
+        <textarea id="field" placeholder="Задайте вопрос агенту…"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
+          onkeydown="if(event.key==='Enter'&&(event.metaKey||event.ctrlKey))send()"></textarea>
+        <button class="send" id="sendbtn" onclick="send()">↑</button>
+      </div>
+      <div class="hint">
+        <span>Cmd+Enter · отправить</span>
+        <span>сообщений в контексте: <span id="cnt">0</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ROLES={
+  operator:{
+    label:'Оператор',badge:'rb-op',back:'veyseloglu_operator.html',
+    icon:'📄',name:'Агент оператора',desc:'Накладные · SKU · расхождения · претензии',
+    avBg:'background:var(--pd);border:1px solid var(--pb)',
+    greeting:'Привет! Я ваш агент по работе с накладными.\n\nМогу помочь:\n- **Найти информацию** по накладной или поставщику\n- **Объяснить расхождение** и предложить действие\n- **Сформировать претензию** с конкретными цифрами\n- **Найти SKU** в номенклатуре 1С\n- Ответить на любой вопрос по процессу приёмки\n\nЧто нужно?',
+    cmds:['Найди накладную Parvaз от 15 мая','Почему SKU не совпал у ProFood?','Напиши претензию — расхождение цены +11%','Как обработать фото низкого качества?','Какие расхождения у Parvaз за месяц?','Что делать если поставщик игнорирует претензию?','Объясни как работает SKU-матчер'],
+    sys:`Ты — агент-оркестратор Sinq OS для оператора приёмки Лейлы Мамедовой в Veysəloğlu Group.
+
+СИСТЕМА: Sinq OS — AI-платформа автоматизации приёмки накладных
+КОМПАНИЯ: Veysəloğlu Group (OBA Market, Araz Market, Rossmann — 500+ магазинов)
+
+СОСТОЯНИЕ СЕГОДНЯ (16.05.2026):
+- Очередь: 47 накладных, 43 обработаны автоматически, 4 требуют внимания
+- Проблемная: #ПГ-1198 от Parvaз — расхождение цены +11.1%, 4 820 ₼
+- ProFood: SKU-матч упал до 74% (поменяли номенклатуру)
+
+ПОСТАВЩИКИ:
+- Parvaз Group (83% ↓): 3-й месяц цены выше заказа +10-12%. Системная проблема
+- Araz Food (98% ↑): Лучший поставщик. Молочка
+- Coca-Cola AZ (94% →): Тренд ↓ по ценам последние 3 недели
+- ProFood LLC (88% ↓): Меняют наименования — SKU-матч падает
+- Nestlé AZ (95% ↑): Стабильный
+- Şərq Şərab (96% →): Договор истекает 22.05
+
+ПРОЦЕСС: Поставщик → OCR (97-99%) → SKU-матч → Сверка с заказом → Оператор (только 6%) → Претензия
+
+Помогай конкретно, с цифрами. Если просят претензию — пиши полный текст. Отвечай на русском, дружелюбно.`
+  },
+
+  manager:{
+    label:'Менеджер',badge:'rb-mgr',back:'veyseloglu_manager.html',
+    icon:'📊',name:'Агент менеджера',desc:'Аналитика · поставщики · остатки · решения',
+    avBg:'background:var(--td);border:1px solid var(--tb)',
+    greeting:'Добрый день.\n\nЯ ваш аналитический агент по закупкам.\n\nМогу помочь:\n- **Проанализировать поставщика** по 4 параметрам\n- **Рассчитать** когда и сколько заказывать\n- **Подготовить аргументы** для переговоров\n- **Объяснить аномалию** в данных\n- **Найти альтернативного поставщика**\n\nЧто анализируем?',
+    cmds:['Стоит ли продолжать работать с Parvaз?','Когда нужно срочно заказать масло 82%?','Сравни Parvaз и Araz Dairy','Подготовь аргументы для встречи с Parvaз','Почему Araz Xətai показывает аномальные потери?','Какие поставщики улучшились за май?','Сколько денег поймала система в мае?','Какой порог расхождений оптимален?'],
+    sys:`Ты — агент-оркестратор Sinq OS для менеджера по закупкам Ирады Гусейновой в Veysəloğlu Group.
+
+СИСТЕМА: Sinq OS — AI-платформа управления закупками и остатками
+КОМПАНИЯ: Veysəloğlu Group (OBA Market, Araz Market, Rossmann — 500+ магазинов)
+
+АНАЛИТИКА (май 2026):
+- Поймано расхождений: 38 600 ₼
+- Экономия ФОТ: 147 200 ₼/мес (15 операторов → 2)
+- ROI системы: 22.4×
+- Накладных: 1 847 (94.2% автоматически)
+
+ПОСТАВЩИКИ:
+- Parvaз Group (83% ↓): 3 мес. подряд +10-12% к заказу. Рекомендация: встреча + ультиматум по ценам
+- Araz Food (98% ↑): Лучший. Наращивать объём
+- Coca-Cola AZ (94% →): Тренд ↓ цен 3 нед. Предупредительное письмо
+- ProFood LLC (88% ↓): SKU-матч 74% из-за смены номенклатуры. Нужен справочник в договоре
+- Nestlé AZ (95% ↑): Стабильный
+- Şərq Şərab (96% →): Договор истекает 22.05. Нужно продлевать
+
+ОСТАТКИ (критичные):
+- Масло сл. 82%: 48 ед., -16/день → 3 дня. СРОЧНО
+- Кефир 1%: 92 ед., -38/день → 2.4 дня. КРИТИЧНО
+- Яйцо С1: 120 ед., -45/день → 2.7 дня. СРОЧНО
+
+МАГАЗИНЫ (проблемные):
+- Araz Xətai: точность 84% (норма 95%+), 12 расхождений/мес, потери 2 840 ₼. Аномалия
+- Rossmann Nizami: 94%, задержки с заявками
+
+Давай конкретные рекомендации с цифрами. Анализируй поставщиков по 4 параметрам (цена/кол-во/сроки/качество). По заказам — считай дни и предлагай объёмы. Отвечай на русском, по-деловому.`
+  },
+
+  admin:{
+    label:'Администратор',badge:'rb-adm',back:'veyseloglu_admin.html',
+    icon:'🛠',name:'Системный агент',desc:'Диагностика · мониторинг · настройка',
+    avBg:'background:var(--gd);border:1px solid var(--gb)',
+    greeting:'Система Sinq OS работает штатно.\n\n**Все 6 агентов активны**, uptime 99.8%.\n\nМогу помочь:\n- **Диагностировать** ошибки и аномалии\n- **Проверить** статус интеграций\n- **Объяснить** поведение агентов\n- **Рекомендовать** настройки порогов\n- Провести **full health check**\n\nЧто проверяем?',
+    cmds:['Сделай полный health check системы','Какие ошибки были за 24 часа?','Почему WhatsApp ещё не подключён?','Оптимальны ли текущие пороги?','Сколько токенов потрачено сегодня?','Есть ли застрявшие задачи?','Диагностируй проблему SKU у ProFood','Покажи узкие места производительности'],
+    sys:`Ты — системный агент Sinq OS, DevOps/ML-инженер знающий платформу изнутри.
+
+СОСТОЯНИЕ (16.05.2026 14:28):
+- Агентов: 6/6 ✓ | Uptime: 99.8% | Накладных за день: 1 847 | Автоматизация: 94.2%
+- Ошибок за 24ч: 3 (2 timeout API, 1 качество фото)
+
+АГЕНТЫ:
+- OCR (GPT-4o Vision): ✓ 1847 задач, avg 8.4с, 12 ошибок/мес
+- SKU-матчер (pgvector+Claude): ✓ 1847 задач, avg 340мс, 28 ошибок/мес
+- Сверщик (код): ✓ 1847 задач, avg 45мс, 0 ошибок
+- Прогноз (ML): ✓ 156 задач, avg 2.1с, 0 ошибок
+- Аномалист (Claude): ✓ 156 задач, avg 1.8с, 0 ошибок
+- Переговорщик (Claude Sonnet): ✓ 47 задач, avg 3.2с, 1 ошибка
+
+ИНТЕГРАЦИИ:
+- 1С УТ: ✓ 80мс | Supabase: ✓ 12мс | Claude API: ✓ 2.1с | GPT-4o: ✓ 8.4с
+- Email IMAP: ✓ 200мс | WhatsApp: ⚠ верификация Meta (8 дней) | е-Qaimə: ✓ 1.2с
+
+РАСХОДЫ (сегодня):
+- Claude API: ~420к + 85к токенов ≈ $0.84
+- GPT-4o Vision: ~1847 запросов ≈ $0.73
+- Очередь: 0 застрявших задач
+
+ПОСЛЕДНИЕ ОШИБКИ:
+- 11:22 — Переговорщик timeout 504, повтор 30с ✓
+- 14:15 — OCR: фото 81% < 90%, → оператору
+- 13.05 — SKU ProFood: 4 позиции не найдены (новые наименования)
+
+Отвечай технически точно, с конкретными диагнозами и действиями. Русский язык.`
+  }
+};
+
+// ── INIT ──
+const roleKey=new URLSearchParams(location.search).get('role')||'operator';
+const R=ROLES[roleKey]||ROLES.operator;
+
+document.getElementById('rb').textContent=R.label;
+document.getElementById('rb').className='tb-badge '+R.badge;
+document.getElementById('rn').textContent=R.name.split('·')[0].trim();
+document.getElementById('back').href=R.back;
+document.getElementById('ai').textContent=R.icon;
+document.getElementById('an').textContent=R.name;
+document.getElementById('ad').textContent=R.desc;
+document.getElementById('av').textContent=R.icon;
+document.getElementById('av').style.cssText=R.avBg;
+document.getElementById('cn').textContent=R.name;
+document.title='Sinq OS · '+R.name;
+
+document.getElementById('cmds').innerHTML=R.cmds.map(c=>
+  `<button class="sb-cmd" onclick="quick('${c.replace(/'/g,"\\'")}')">${c}</button>`
+).join('');
+
+const hist=[];
+addMsg(R.greeting,'a');
+
+// ── CHAT ──
+function quick(t){document.getElementById('field').value=t;send();}
+
+async function send(){
+  const f=document.getElementById('field');
+  const t=f.value.trim();
+  if(!t||document.getElementById('sendbtn').disabled)return;
+  f.value='';f.style.height='';
+  addMsg(t,'u');
+  await callAPI(t);
+}
+
+function addMsg(text,role){
+  const el=document.getElementById('msgs');
+  const time=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  const d=document.createElement('div');
+  d.className='msg '+role;
+  const meta=role==='a'
+    ?`<div class="msg-meta"><span style="font-size:13px">${R.icon}</span><span>${R.name}</span><span>${time}</span></div>`
+    :`<div class="msg-meta"><span>${time}</span></div>`;
+  d.innerHTML=meta+`<div class="bubble">${fmt(text)}</div>`;
+  el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+  hist.push({role:role==='u'?'user':'assistant',content:text});
+  document.getElementById('cnt').textContent=hist.length;
+}
+
+function fmt(t){
+  return t
+    .replace(/```([\s\S]*?)```/g,'<pre>$1</pre>')
+    .replace(/`([^`\n]+)`/g,'<code>$1</code>')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*?<\/li>\n?)+/gs,m=>'<ul>'+m+'</ul>')
+    .replace(/\n/g,'<br>');
+}
+
+async function callAPI(userText){
+  const btn=document.getElementById('sendbtn');
+  const th=document.getElementById('thinking');
+  btn.disabled=true;th.classList.add('on');
+
+  try{
+    const msgs=hist.slice(-14).map(m=>({role:m.role,content:m.content}));
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:R.sys,
+        messages:msgs
+      })
+    });
+    const data=await res.json();
+    th.classList.remove('on');btn.disabled=false;
+    if(data.content?.[0]){
+      addMsg(data.content.map(b=>b.text||'').join(''),'a');
+    } else {
+      addMsg('Ошибка API: '+(data.error?.message||JSON.stringify(data)),'a');
+    }
+  } catch(e){
+    th.classList.remove('on');btn.disabled=false;
+    addMsg('Нет связи с Claude API. Попробуйте открыть страницу с сервера (GitHub Pages), а не локально.\n\n`'+e.message+'`','a');
+  }
+}
+
+function clearChat(){
+  hist.length=0;
+  document.getElementById('msgs').innerHTML='';
+  document.getElementById('cnt').textContent='0';
+  addMsg(R.greeting,'a');
+  showToast('Чат очищен');
+}
+
+function showToast(m){
+  const el=document.getElementById('toast');
+  el.textContent=m;el.classList.add('on');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2600);
+}
+</script>
+</body>
+</html>
